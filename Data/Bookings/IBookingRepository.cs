@@ -1,13 +1,14 @@
-using Model;
+using Model.Bookings;
 
-namespace Data;
+namespace Data.Bookings;
 
 public interface IBookingRepository
 {
     Task<List<Booking>> GetAllBookings();
-    Task<Booking> GetBookingById(Guid id);
-    Task CreateBooking(Booking booking);
+    Task AddBooking(Booking booking);
     Task UpdateBooking(Booking booking);
     Task CancelBooking(Guid bookingId);
     Task SaveBookings(List<Booking> bookings);
+    List<BookingDetails> GetFilteredBookings(List<BookingDetails> bookingDetails,
+        BookingSearchParameters searchParameters, string value);
 }

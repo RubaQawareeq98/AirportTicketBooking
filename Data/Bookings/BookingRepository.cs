@@ -1,6 +1,6 @@
-using Model;
+using Model.Bookings;
 
-namespace Data;
+namespace Data.Bookings;
 
 public class BookingRepository(string filePath, IFileRepository<Booking> fileRepository) : IBookingRepository
 {
@@ -18,19 +18,8 @@ public class BookingRepository(string filePath, IFileRepository<Booking> fileRep
             throw;
         }
     }
-
-    public async Task<Booking> GetBookingById(Guid id)
-    {
-        var bookings = await GetAllBookings();
-        var booking = bookings.Find(b => b.Id == id);
-        if (booking is null)
-        {
-            throw new InvalidOperationException("Booking not found");
-        }
-        return booking;
-    }
-
-    public async Task CreateBooking(Booking booking)
+    
+    public async Task AddBooking(Booking booking)
     {
         var bookings =  await GetAllBookings();
         bookings.Add(booking);
@@ -72,5 +61,47 @@ public class BookingRepository(string filePath, IFileRepository<Booking> fileRep
             Console.WriteLine(ex.Message);
             throw;
         }
+    }
+
+    public List<BookingDetails> GetFilteredBookings(List<BookingDetails> bookingDetails,
+        BookingSearchParameters searchParameters, string value)
+    {
+        switch (searchParameters)
+        {
+            case BookingSearchParameters.Id:
+                if (Guid.TryParse(value, out var bookingId))
+                    return bookingDetails.Where(item => item.Flight.Id == bookingId).ToList();
+                throw new InvalidOperationException("Invalid booking id");
+            case BookingSearchParameters.FlightId:
+                if (Guid.TryParse(value, out var flightId))
+                    return bookingDetails.Where(item => item.Flight.Id == flightId).ToList();
+                throw new InvalidOperationException("Invalid flight id");
+            case BookingSearchParameters.BookingDate:
+                if (DateTime.TryParse(value, out var bookingDate))
+                    return bookingDetails.Where(item => item.BookingDate.Date == bookingDate.Date).ToList();
+                throw new InvalidOperationException("Invalid booking date");
+            case BookingSearchParameters.Cancelled:
+                return bookingDetails.Where(item => item.Cancelled).Select(item => item).ToList();
+            case BookingSearchParameters.DepartureDate:
+                if (DateTime.TryParse(value, out var departureDate))
+                    return bookingDetails.Where(item => item.Flight.DepartureDate.Date == departureDate.Date).ToList();
+                break;
+            case BookingSearchParameters.DepartureCountry:
+                return bookingDetails.Where(item => item.Flight.DepartureCountry == value).Select(item => item).ToList();
+            case BookingSearchParameters.DestinationCountry:
+                return bookingDetails.Where(item => item.Flight.DestinationCountry == value).Select(item => item).ToList();
+            case BookingSearchParameters.PassengerName:
+                return bookingDetails.Where(item => item.User.FullName == value).Select(item => item).ToList();
+            case BookingSearchParameters.PassengerId:
+                return bookingDetails.Where(item => item.PassengerId == Guid.Parse(value)).Select(item => item).ToList();
+            case BookingSearchParameters.ClassType:
+                return bookingDetails.Where(item => nameof(item.FlightClass) == value).Select(item => item).ToList();
+            case BookingSearchParameters.Price:
+                return bookingDetails.Where(item => Math.Abs(item.Price - double.Parse(value)) < 0).Select(item => item).ToList();
+            default:
+                Console.WriteLine("Please enter a valid option");
+                break;
+        }
+        return [];
     }
 }

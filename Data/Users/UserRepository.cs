@@ -1,4 +1,5 @@
 using Model;
+using Model.Users;
 
 namespace Data;
 

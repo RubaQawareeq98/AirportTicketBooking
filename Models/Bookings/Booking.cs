@@ -1,4 +1,4 @@
-namespace Model;
+namespace Model.Bookings;
 
 public class Booking(Guid passengerId, Guid flightId, FlightClass flightClass, double price)
 {
