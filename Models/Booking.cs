@@ -1,10 +1,10 @@
 namespace Model;
 
-public class Booking(Guid passengerId, int flightId, FlightClass flightClass, double price)
+public class Booking(Guid passengerId, Guid flightId, FlightClass flightClass, double price)
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid PassengerId { get; set; } = passengerId;
-    public int FlightId { get; set; } = flightId;
+    public Guid FlightId { get; set; } = flightId;
     public DateTime BookingDate { get; set; } = DateTime.Now;
     public FlightClass FlightClass { get; set; } = flightClass;
     public double Price { get; set; } = price;

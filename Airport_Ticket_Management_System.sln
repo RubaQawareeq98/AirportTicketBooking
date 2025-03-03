@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Airport_Ticket_Management_S
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Models", "Models\Models.csproj", "{46F3E80E-8472-4FCD-9E36-E8C728F90753}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Data", "Data\Data.csproj", "{0BC4C0AE-6398-49FD-8D54-12197C6B5401}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{46F3E80E-8472-4FCD-9E36-E8C728F90753}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{46F3E80E-8472-4FCD-9E36-E8C728F90753}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{46F3E80E-8472-4FCD-9E36-E8C728F90753}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0BC4C0AE-6398-49FD-8D54-12197C6B5401}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0BC4C0AE-6398-49FD-8D54-12197C6B5401}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0BC4C0AE-6398-49FD-8D54-12197C6B5401}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0BC4C0AE-6398-49FD-8D54-12197C6B5401}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

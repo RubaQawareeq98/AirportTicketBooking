@@ -1,0 +1,15 @@
+[
+  {
+    "Id": "3da9efb3-185c-4233-bf4e-bbc0ece8548b",
+    "DepartureCountry": "USA",
+    "DestinationCountry": "UK",
+    "DepartureDate": "2025-03-15T10:30:00",
+    "DepartureAirport": "JFK",
+    "ArrivalAirport": "LHR",
+    "Prices": {
+      "Economy": 200,
+      "Business": 500,
+      "First": 300
+    }
+  }
+]

@@ -2,7 +2,7 @@ namespace Model;
 
 public class Flight
 { 
-    public required int Id { get; set; }
+    public required Guid Id { get; set; }
     public required string DepartureCountry { get; set; }
     public required string DestinationCountry { get; set; }
     public required DateTime DepartureDate { get; set; }
@@ -13,6 +13,11 @@ public class Flight
     private double GetPrice(FlightClass flightClass)
     {
         return Prices.GetValueOrDefault(flightClass, 0);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is Flight flight && Id.Equals(flight.Id);
     }
 
     public override string ToString()
