@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Airport_Ticket_Management_System", "Airport_Ticket_Management_System\Airport_Ticket_Management_System.csproj", "{926DCF19-BF61-40A3-A7F4-D0990708C914}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Models", "Models\Models.csproj", "{46F3E80E-8472-4FCD-9E36-E8C728F90753}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{926DCF19-BF61-40A3-A7F4-D0990708C914}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{926DCF19-BF61-40A3-A7F4-D0990708C914}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{926DCF19-BF61-40A3-A7F4-D0990708C914}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{926DCF19-BF61-40A3-A7F4-D0990708C914}.Release|Any CPU.Build.0 = Release|Any CPU
+		{46F3E80E-8472-4FCD-9E36-E8C728F90753}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{46F3E80E-8472-4FCD-9E36-E8C728F90753}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46F3E80E-8472-4FCD-9E36-E8C728F90753}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{46F3E80E-8472-4FCD-9E36-E8C728F90753}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
