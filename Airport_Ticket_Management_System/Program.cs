@@ -18,7 +18,10 @@ class Program
         var filePath = Path.Combine(directorySettings.BaseDirectory,"flights.json");
         IFileRepository<Flight> fileRepository = new FileRepository<Flight>();
         var flightRepository = new FlightRepository(filePath, fileRepository);
-       var result = await flightRepository.ImportFlights(@"C:\Users\Ruba\Downloads\Book.csv");
+      // var result = await flightRepository.ImportFlights(@"C:\Users\Ruba\Downloads\Book.csv");
+      // var flight = await flightRepository.GetFlightById(new Guid("3da9efb3-185c-4233-bf4e-bbc0ece8548b"));
+      // flight.Prices[FlightClass.Business] = 5555;
+      // await flightRepository.UpdateFlight(flight);
 
        // var id = new Guid("3da9efb3-185c-4233-bf4e-bbc0ece8548a");
        // await flightRepository.DeleteFlight(id);

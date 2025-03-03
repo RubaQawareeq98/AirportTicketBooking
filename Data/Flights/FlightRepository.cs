@@ -36,33 +36,31 @@ public class FlightRepository(string filePath, IFileRepository<Flight> fileRepos
 
     public async Task AddFlight(Flight flight)
     {
-        var flights =  await GetAllFlights();
-        flights.Add(flight);
+        try
+        {
+            var flights = await GetAllFlights();
+            flights.Add(flight);
+            await SavaFlights(flights);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+       
+    }
+
+    public async Task UpdateFlight(Flight modifiedFlight)
+    {
+        var flights = await GetAllFlights();
+        for (var i = 0; i < flights.Count; i++)
+            if (flights[i].Equals(modifiedFlight))
+            {
+                flights[i] = modifiedFlight;
+                break;
+            }
         await SavaFlights(flights);
     }
 
-    public async Task<Flight> GetFlightById(Guid id)
-    {
-        var flights = await GetAllFlights();
-        var flight = flights.Find(f => f.Id == id);
-        if (flight is null)
-        {
-            throw new InvalidOperationException("Flight not found");
-        }
-        return flight;
-    }
-
-    public async Task UpdateFlight(Flight flight)
-    {
-        var flights = await GetAllFlights();
-        var oldFlight = flights.Find(f => f.Id == flight.Id);
-        if (oldFlight is null)
-        {
-            throw new InvalidOperationException("Flight not found"); 
-        }
-        oldFlight = flight;
-        await SavaFlights(flights);
-    }
 
     public async Task DeleteFlight(Guid id)
     {
@@ -119,7 +117,32 @@ public class FlightRepository(string filePath, IFileRepository<Flight> fileRepos
         }
         return importFlightsResult;
     }
-    
+
+    public async Task<List<Flight>> GetFilteredFlights(FlightSearchParams searchParams, string value)
+    {
+        var flights = await GetAllFlights();
+        return searchParams switch
+        {
+            FlightSearchParams.Id => Guid.TryParse(value, out var id)? flights.Where(flight => flight.Id == id).ToList() 
+            : throw new InvalidDataException("Invalid Flight Id."),
+            FlightSearchParams.DepartureCountry => flights.Where(flight => flight.DepartureCountry == value).ToList(),
+            FlightSearchParams.DestinationCountry => flights.Where(flight => flight.DestinationCountry == value).ToList(),
+            FlightSearchParams.DepartureDate => DateTime.TryParse(value, out var dateTime)
+                ? flights.Where(flight => flight.DepartureDate.Date == dateTime)
+                    .ToList()
+                : throw new InvalidDataException("Invalid Departure date value input."),
+            FlightSearchParams.DepartureAirport => flights.Where(flight => flight.DepartureAirport == value).ToList(),
+            FlightSearchParams.ArrivalAirport => flights.Where(flight => flight.ArrivalAirport == value).ToList(),
+            FlightSearchParams.Price => double.TryParse(value, out var price)
+                ? flights.Where(flight => flight.Prices.ContainsValue(price)).ToList()
+                : throw new InvalidDataException("Invalid Price value input."),
+            FlightSearchParams.Class => Enum.TryParse(typeof(FlightClass), value, true, out var flightClass)
+                ? flights.Where(flight => flight.Prices.ContainsKey((FlightClass)flightClass)).ToList()
+                : throw new InvalidDataException("Invalid Flight class value input."),
+            _ => flights
+        };
+    }
+
     private static string ValidateFlight(Flight flight)
     {
         if (string.IsNullOrEmpty(flight.DepartureCountry))
