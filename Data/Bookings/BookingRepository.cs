@@ -1,4 +1,5 @@
 using Model.Bookings;
+using Model.Users;
 
 namespace Data.Bookings;
 
@@ -44,7 +45,7 @@ public class BookingRepository(string filePath, IFileRepository<Booking> fileRep
         var booking = bookings.Find(b => b.Id == bookingId);
         if (booking is null)
         {
-            throw new InvalidOperationException("Booking not found"); 
+            throw new NoBookingFoundException("Booking not found"); 
         }
         booking.Cancelled = true;
         await SaveBookings(bookings);

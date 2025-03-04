@@ -1,6 +1,7 @@
 using System.Globalization;
 using CsvHelper;
 using Model;
+using Model.Flights;
 
 namespace Data;
 

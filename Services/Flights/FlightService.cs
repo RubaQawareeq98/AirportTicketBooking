@@ -5,15 +5,18 @@ namespace Services.Flights;
 
 public class FlightService(FlightRepository flightRepository) : IFlightService
 {
-    
-    public async Task<Flight> GetFlightById(string flightId)
+    public async Task<List<Flight>> GetAllFlights()
+    {
+        return await flightRepository.GetAllFlights();
+    }
+
+    public async Task<Flight> GetFlightById(Guid flightId)
     {
         var flights = await flightRepository.GetAllFlights();
-        var id = Guid.TryParse(flightId, out var flightIdGuid) ? flightIdGuid : throw new InvalidCastException("Invalid flight Id");
-        var flight = flights.Find(f => f.Id == id);
+        var flight = flights.Find(f => f.Id == flightId);
         if (flight is null)
         {
-            throw new FlightNotFoundException($"Flight with id {id} not found");  
+            throw new FlightNotFoundException($"Flight with id {flightId} not found");  
         }
         return flight;
     }
@@ -49,12 +52,11 @@ public class FlightService(FlightRepository flightRepository) : IFlightService
         await flightRepository.UpdateFlight(flight);
     }
 
-    public async Task DeleteFlight(string flightId)
+    public async Task DeleteFlight(Guid flightId)
     {
         var flight = await GetFlightById(flightId);
         if (flight is null) throw new FlightNotFoundException("Flight not found");
-        var id = Guid.TryParse(flightId, out var flightIdGuid) ? flightIdGuid : throw new InvalidCastException("Invalid flight Id");
-        await flightRepository.DeleteFlight(id);
+        await flightRepository.DeleteFlight(flightId);
     }
 
     public async Task<ImportFlightResult> ImportFlight(string filePath)

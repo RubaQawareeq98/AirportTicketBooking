@@ -4,13 +4,18 @@ using Model.Bookings;
 
 namespace Services.Bookings;
 
-public class BookingService (IBookingRepository bookingRepository, IFlightRepository flightRepository, IUserRepository userRepository) : IBookingService
+public class BookingService (IBookingRepository bookingRepository,
+    IFlightRepository flightRepository, IUserRepository userRepository) : IBookingService
 {
-    public async Task<Booking> GetBookingById(string bookingId)
+    public async Task<List<Booking>> GetAllBookings()
+    {
+        return await bookingRepository.GetAllBookings();
+    }
+
+    public async Task<Booking> GetBookingById(Guid bookingId)
     {
         var bookings = await bookingRepository.GetAllBookings();
-        var id = Guid.TryParse(bookingId, out var bookingIdGuid) ? bookingIdGuid : throw new InvalidCastException("Invalid booking Id");
-        var booking = bookings.FirstOrDefault(b => b.Id == id);
+        var booking = bookings.FirstOrDefault(b => b.Id == bookingId);
         if (booking is null)
         {
             throw new BookingNotFound("Invalid booking Id");
@@ -78,11 +83,10 @@ public class BookingService (IBookingRepository bookingRepository, IFlightReposi
         await bookingRepository.UpdateBooking(booking);
     }
 
-    public async Task DeleteBooking(string bookingId)
+    public async Task DeleteBooking(Guid bookingId)
     {
         var booking = await GetBookingById(bookingId);
         if (booking is null) throw new BookingNotFound("Booking not found");
-        var id = Guid.TryParse(bookingId, out var bookingIdGuid) ? bookingIdGuid : throw new InvalidCastException("Invalid booking Id");
-        await bookingRepository.CancelBooking(id);
+        await bookingRepository.CancelBooking(bookingId);
     }
 }

@@ -1,6 +1,6 @@
 using CsvHelper.Configuration;
 
-namespace Model;
+namespace Model.Flights;
 
 public sealed class FlightMap : ClassMap<Flight>
 {

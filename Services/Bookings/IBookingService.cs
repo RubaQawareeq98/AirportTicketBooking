@@ -4,9 +4,10 @@ namespace Services.Bookings;
 
 public interface IBookingService
 {
-    Task<Booking> GetBookingById(string bookingId);
+    Task<List<Booking>> GetAllBookings();
+    Task<Booking> GetBookingById(Guid bookingId);
     Task<List<BookingDetails>> GetFilteredBooking(BookingSearchParameters searchParameter, string value);
     Task AddBooking(Booking booking);
     Task UpdateBooking(Booking booking);
-    Task DeleteBooking(string bookingId);
+    Task DeleteBooking(Guid bookingId);
 }

@@ -6,5 +6,9 @@ public class BookingDetails(Guid passengerId, Guid flightId, FlightClass flightC
 {
     public Flight Flight { get; set; }
     public User User { get; set; }
-    
+
+    public override string ToString()
+    {
+        return $"Booking: {base.ToString()}, Flight: {Flight.Id}: {Flight.DepartureCountry} --> {Flight.DestinationCountry}, Passenger: {User}";
+    }
 }

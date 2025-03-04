@@ -2,7 +2,7 @@ namespace Model.Bookings;
 
 public enum BookingSearchParameters
 {
-    Id,
+    Id = 1,
     FlightId,
     ClassType,
     Cancelled,
