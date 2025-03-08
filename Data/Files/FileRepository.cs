@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace Data;
+namespace Data.Files;
 
 public class FileRepository<T> : IFileRepository<T>
 {
@@ -13,8 +13,10 @@ public class FileRepository<T> : IFileRepository<T>
             {
                 return [];
             }
+
             var jsonString = await File.ReadAllTextAsync(filePath);
-            return (!string.IsNullOrWhiteSpace(jsonString) ? JsonSerializer.Deserialize<List<T>>(jsonString) : []) ?? [];
+            return (!string.IsNullOrWhiteSpace(jsonString) ? JsonSerializer.Deserialize<List<T>>(jsonString) : []) ??
+                   [];
         }
         catch (FileNotFoundException exp)
         {
@@ -41,6 +43,7 @@ public class FileRepository<T> : IFileRepository<T>
         catch(FileNotFoundException exp)
         {
             Console.WriteLine($"File {filePath} not found. {exp.Message}");
+            throw;
         }
     }
 }

@@ -1,17 +1,13 @@
-using Model;
 using Model.Bookings;
-using Services.Bookings;
-using Services.Flights;
+using Model.Flights;
 using Views.Passengers;
 
 namespace Views.Managers;
 
-public class ManagerView (IFlightService flightService, IBookingService bookingService) : IManagerView
+public class ManagerView : IManagerView
 {
-    public async Task ShowManagerMenu()
+    public void ShowManagerMenu()
     {
-        while (true)
-        {
             Console.WriteLine("If You Want to Show All Flights press 1");
             Console.WriteLine("If You Want to Show All Bookings press 2");
             Console.WriteLine("If You Want to Show All Passengers press 3");
@@ -19,60 +15,26 @@ public class ManagerView (IFlightService flightService, IBookingService bookingS
             Console.WriteLine("If You Want to Import new Flights press 5");
             Console.WriteLine("If You Want to Exit press 6");
             Console.WriteLine("Please select an option:");
-            
-            var option = Console.ReadLine();
-            if (!int.TryParse(option, out var optionNumber)) throw new InvalidOptionException("Invalid option number");
-            if (optionNumber is < 1 or > 6) throw new InvalidOptionException("Invalid option number");
-            if (optionNumber == 6) break;
-            
-            await HandleManagerSelection((ManagerOptions)optionNumber);
-        }
     }
 
-    public async Task HandleManagerSelection(ManagerOptions option)
+    public ManagerOptions ReadManagerOptions()
     {
-        try
-        {
-            switch (option)
-            {
-                case ManagerOptions.ViewFlights:
-                    await HandleViewFlights();
-                    break;
-                case ManagerOptions.ViewBookings:
-                    await HandleViewBookings();
-                    break;
-                case ManagerOptions.ViewPassengers:
-                    await HandleFilterBooking();
-                    break;
-                case ManagerOptions.FilterBookings:
-                    await HandleImportFlights();
-                    break;
-                case ManagerOptions.ImportFlights:
-                    await HandleImportFlights();
-                    break;
-                case ManagerOptions.Exit:
-                    return;
-                default:
-                    Console.WriteLine("Please select a valid option");
-                    break;
-            }
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e.Message);
-        }
+        var option = Console.ReadLine();
+        if (!int.TryParse(option, out var optionNumber)) throw new InvalidOptionException("Invalid option number");
+        if (optionNumber is < 1 or > 6) throw new InvalidOptionException("Invalid option number");
+        return (ManagerOptions) optionNumber;
     }
-
-    public async Task HandleImportFlights()
+    
+    public string ReadCsvPath()
     {
         Console.WriteLine("*** Importing Flights ***");
         Console.WriteLine("Please enter the path of the flights csv file you would like to import:");
         var path = Console.ReadLine();
         if (string.IsNullOrEmpty(path)) throw new InvalidDataException("Invalid path...");
-        await flightService.ImportFlight(path);
+        return path;
     }
 
-    private static void ShowFilterOptions()
+    public void ShowFilterOptions()
     {
         Console.WriteLine("Please select a valid option");
         Console.WriteLine("If You Want to filter bookings based on booking ID press 1");
@@ -88,67 +50,27 @@ public class ManagerView (IFlightService flightService, IBookingService bookingS
         Console.WriteLine("If you want to filter bookings based on Passenger name press 11");
     }
 
-    public async Task HandleFilterBooking()
-    {
-        try
-        {
-            ShowFilterOptions();
-            var bookings = await GetBookingDetails();
-            ShowBookingDetails(bookings);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
-    }
-
-    private async Task<List<BookingDetails>> GetBookingDetails()
+    public BookingFilterOptions ReadFilterOption()
     {
         Console.WriteLine("Enter the option number you want to filter bookings based on it");
         var option = Console.ReadLine();
         
         if (!int.TryParse(option, out var optionNumber)) throw new InvalidOptionException("Invalid option number");
         if (optionNumber is < 1 or > 11) throw new InvalidOptionException("Invalid option number");
-        
+        return (BookingFilterOptions) optionNumber;
+    }
+
+    public string ReadFilterValue()
+    {
         Console.WriteLine("Enter value you looking for");
         var value = Console.ReadLine();
-        if (string.IsNullOrEmpty(option) || string.IsNullOrEmpty(value))
+        if (string.IsNullOrEmpty(value))
         {
             throw new InvalidDataException("Invalid input, value should not be empty");
         }
-        
-        return await bookingService.GetFilteredBooking((BookingSearchParameters)optionNumber, value);
+        return value;
     }
-
-    public async Task HandleViewFlights()
-    {
-        try
-        {
-            var flights = await flightService.GetAllFlights();
-            ShowFlights(flights);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
-    }
-
-    public async Task HandleViewBookings()
-    {
-        try
-        {
-            var bookings = await bookingService.GetAllBookings();
-            ShowBookings(bookings);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
-    }
-
+    
     public void ShowFlights(List<Flight> flights)
     {
         Console.WriteLine($"{"".PadLeft(150, '=')}");
@@ -176,6 +98,5 @@ public class ManagerView (IFlightService flightService, IBookingService bookingS
         Console.WriteLine($"{"".PadLeft(170, '=')}");
         bookingDetails.ForEach(Console.WriteLine);
         Console.WriteLine($"{"".PadLeft(170, '=')}");
-        
     }
 }

@@ -1,13 +1,13 @@
 namespace Model;
 
-public enum FlightSearchParams
+public enum FlightFilterOptions
 {
-    Id,
+    Id = 1,
     DepartureCountry,
     DestinationCountry,
+    DepartureDate,
     DepartureAirport,
     ArrivalAirport,
-    DepartureDate,
     Price,
     Class
 }

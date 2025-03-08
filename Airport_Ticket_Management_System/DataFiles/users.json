@@ -1,0 +1,23 @@
+[
+  {
+    "Id": "3da9efb3-185c-4233-bf4e-bbc0ece8548c",
+    "UserName": "ruba2020",
+    "FullName": "Ruba Qawareeq",
+    "Password": "ruba123",
+    "Role": 0
+  },
+  {
+    "Id": "3da9efb3-185c-4233-bf4e-bbc0ece85481",
+    "UserName": "ali",
+    "FullName": "Ali",
+    "Password": "1223456",
+    "Role": 1
+  },
+  {
+    "Id": "3da9efb3-185c-4233-bf4e-bbc0ece85482",
+    "UserName": "hiba",
+    "FullName": "Hiba",
+    "Password": "12345",
+    "Role": 1
+  }
+]

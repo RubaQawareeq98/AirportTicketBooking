@@ -1,6 +1,6 @@
 namespace Model.Bookings;
 
-public enum BookingSearchParameters
+public enum BookingFilterOptions
 {
     Id = 1,
     FlightId,
@@ -11,7 +11,7 @@ public enum BookingSearchParameters
     DepartureCountry,
     DestinationCountry,
     Price,
+    PassengerId,
     PassengerName,
-    PassengerId
 }
 

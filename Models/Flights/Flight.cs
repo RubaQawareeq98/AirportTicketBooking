@@ -1,4 +1,4 @@
-namespace Model;
+namespace Model.Flights;
 
 public class Flight
 { 

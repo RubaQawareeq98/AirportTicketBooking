@@ -4,8 +4,8 @@ public enum PassengerOptions
 {
     ViewFlights = 1,
     FilterFlights,
-    ViewBookings,
     AddBooking,
+    ViewBookings,
     CancelBooking,
     ModifyBooking,
     Exit

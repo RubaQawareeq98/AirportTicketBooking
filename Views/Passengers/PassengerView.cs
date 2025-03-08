@@ -1,98 +1,54 @@
+using Data.Exceptions;
 using Model;
 using Model.Bookings;
-using Model.Users;
-using Services.Bookings;
-using Services.Flights;
-using Services.Users;
+using Model.Flights;
+using Services.Bookings.Exceptions;
 
 namespace Views.Passengers;
 
-public class PassengerView (IFlightService flightService, IUserService userService, 
-    ICurrentUser currentUser, IBookingService bookingService) : IPassengerView
+public class PassengerView : IPassengerView
 {
-    public async Task ShowPassengerMainMenu()
+    public PassengerOptions ShowPassengerMainMenu()
     {
-        while (true)
-        {
             ShowPassengerOptions();
             var option = Console.ReadLine();
             if (!int.TryParse(option, out var optionNumber)) throw new InvalidOptionException("Invalid option number");
             if (optionNumber is < 1 or > 7) throw new InvalidOptionException("Invalid option number");
-            if (optionNumber == 7) break;
-            await HandlePassengerSelection((PassengerOptions)optionNumber);
-        }
+            return (PassengerOptions)optionNumber;
     }
 
     public void ShowFilterOptions()
     {
-        Console.WriteLine("If you want to filter flights based on departure Country press 1");
-        Console.WriteLine("If you want to filter flights based on destination Country press 2");
-        Console.WriteLine("If you want to filter flights based on departure date press 3");
-        Console.WriteLine("If you want to filter flights based on departure airport press 4");
-        Console.WriteLine("If you want to filter flights based on arrival airport press 5");
-        Console.WriteLine("If you want to filter flights based on price press 6");
-        Console.WriteLine("If you want to filter flights based on class press 7");
+        Console.WriteLine("If you want to filter flights based on Flight ID press 1");
+        Console.WriteLine("If you want to filter flights based on departure Country press 2");
+        Console.WriteLine("If you want to filter flights based on destination Country press 3");
+        Console.WriteLine("If you want to filter flights based on departure date press 4");
+        Console.WriteLine("If you want to filter flights based on departure airport press 5");
+        Console.WriteLine("If you want to filter flights based on arrival airport press 6");
+        Console.WriteLine("If you want to filter flights based on price press 7");
+        Console.WriteLine("If you want to filter flights based on class press 8");
     }
-    
-    public async Task <List<Flight>>HandleFilterOption()
+
+    public FlightFilterOptions ReadFilterOptions()
     {
-        ShowFilterOptions();
         Console.WriteLine("Enter the option number you want to filter flights based on it");
         var option = Console.ReadLine();
+        if (!int.TryParse(option, out var optionNumber)) throw new InvalidOptionException("Invalid option number");
+        if (optionNumber is < 1 or > 7) throw new InvalidOptionException("Invalid option number");
+        return (FlightFilterOptions)optionNumber;
+    }
+
+    public string ReadFilterValue()
+    {
         Console.WriteLine("Enter value you looking for");
         var value = Console.ReadLine();
-        if (string.IsNullOrEmpty(option) || string.IsNullOrEmpty(value))
+        if (string.IsNullOrEmpty(value))
         {
             throw new InvalidDataException("Invalid option");
         }
-        if (!int.TryParse(option, out var optionNumber)) throw new InvalidOptionException("Invalid option number");
-        if (optionNumber is < 1 or > 7) throw new InvalidOptionException("Invalid option number");
-
-        try
-        {
-            var flights = await flightService.GetFilteredFlights((FlightSearchParams)optionNumber, value);
-            return flights;
-        }
-        catch (Exception exp)
-        {
-            Console.WriteLine(exp.Message);
-            throw;
-        }
+        return value;
     }
     
-    public async Task HandlePassengerSelection(PassengerOptions passengerOptions)
-    {
-        switch (passengerOptions)
-        {
-            case PassengerOptions.ViewFlights:
-               var flights = await flightService.GetAllFlights();
-                ShowFlights(flights);
-                break;
-            
-            case PassengerOptions.FilterFlights:
-                var filteredFlights = await HandleFilterOption();
-                ShowFlights(filteredFlights);
-                break;
-            case PassengerOptions.ViewBookings:
-                var bookings = await userService.GetPassengerBookings(currentUser.User.Id);
-                ShowBookings(bookings);
-                break;
-            case PassengerOptions.AddBooking:
-                await HandleAddBooking();
-                break;
-            case PassengerOptions.CancelBooking:
-                await HandleCancelBooking();
-                break;
-            case PassengerOptions.ModifyBooking:
-                await HandleModifyBooking();
-                break;
-            case PassengerOptions.Exit:
-                return;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(passengerOptions), passengerOptions, null);
-        }
-    }
-
     private static void ShowPassengerOptions()
     {
         Console.WriteLine("If you want to view available flights press 1");
@@ -126,74 +82,29 @@ public class PassengerView (IFlightService flightService, IUserService userServi
         Console.WriteLine($"{"".PadLeft(170, '=')}");
     }
 
-    public async Task HandleAddBooking()
+    public static Guid ReadFlightId()
     {
         Console.WriteLine("Enter The flight ID you want to book");
-        _ = Guid.TryParse(Console.ReadLine(), out var flightId)? flightId : throw new BookingNotFound("Invalid booking id");
-        
-        try
-        {
-            var flight = await flightService.GetFlightById(flightId);
-            Console.WriteLine("Enter the flight class you want to book [Economy | Business | First]");
-            var value = Console.ReadLine();
+        return Guid.TryParse(Console.ReadLine(), out var flightId)? flightId : throw new BookingNotFoundException("Invalid booking id");
 
-            if (string.IsNullOrEmpty(value) || !Enum.TryParse(value, true, out FlightClass flightClass))
-            {
-                throw new InvalidDataException("Invalid input. Please enter a valid flight class (Economy, Business, First).");
-            }
-        
-            var booking = new Booking(currentUser.User.Id, flight.Id, flightClass, flight.Prices[flightClass]);
-            await bookingService.AddBooking(booking);
-            Console.WriteLine("Your booking is successfully booked");
-        }
-        catch (InvalidOperationException exp)
-        {
-            Console.WriteLine(exp.Message);
-        }
     }
 
-    public async Task HandleCancelBooking()
+    public static FlightClass ReadFlightClass()
     {
-        Console.WriteLine("Enter the ID of the booking you want to cancel");
-        _ = Guid.TryParse(Console.ReadLine(), out var bookingId)? bookingId : throw new BookingNotFound("Invalid booking id");
-        var booking = await bookingService.GetBookingById(bookingId);
-        if (booking is null || booking.PassengerId != currentUser.User.Id)
-        {
-            throw new NoBookingFoundException("Invalid booking id");
-        }
-        await bookingService.DeleteBooking(booking.Id);
-        Console.WriteLine("Your booking is successfully cancelled");
-    }
-
-    public async Task HandleModifyBooking()
-    {
-        Console.WriteLine("Enter the ID of the booking you want to modify");
-        _ = Guid.TryParse(Console.ReadLine(), out var bookingId)? bookingId : throw new BookingNotFound("Invalid booking id");
-        var booking = await bookingService.GetBookingById(bookingId);
-        if (booking is null || booking.PassengerId != currentUser.User.Id)
-        {
-            throw new NoBookingFoundException("Invalid booking id");
-        }
-        
-        Console.WriteLine("Enter the new Class you want to book [Economy | Business | First]");
+        Console.WriteLine("Enter the flight class you want to book [Economy | Business | First]");
         var value = Console.ReadLine();
 
         if (string.IsNullOrEmpty(value) || !Enum.TryParse(value, true, out FlightClass flightClass))
         {
-            throw new InvalidDataException("Invalid input. Please enter a valid flight class (Economy, Business, First).");
+            throw new InvalidClassException();
         }
-
-        try
-        {
-            var flight = await flightService.GetFlightById(booking.FlightId);
-            booking.FlightClass = flightClass;
-            booking.Price = flight.Prices[flightClass];
-            await bookingService.UpdateBooking(booking);
-            Console.WriteLine("Your booking is modified successfully");
-        }
-        catch (InvalidOperationException exp)
-        {
-            Console.WriteLine(exp.Message);
-        }
+        return flightClass;
     }
+
+    public static Guid ReadBookingId()
+    {
+        Console.WriteLine("Enter the ID of the booking you want to cancel");
+        return Guid.TryParse(Console.ReadLine(), out var bookingId)? bookingId : throw new BookingNotFoundException("Invalid booking id");
+    }
+  
 }

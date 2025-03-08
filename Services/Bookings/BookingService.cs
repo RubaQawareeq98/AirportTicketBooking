@@ -1,6 +1,10 @@
 using Data;
 using Data.Bookings;
+using Data.Flights;
 using Model.Bookings;
+using Model.Users;
+using Model.Users.Exceptions;
+using Services.Bookings.Exceptions;
 
 namespace Services.Bookings;
 
@@ -9,7 +13,9 @@ public class BookingService (IBookingRepository bookingRepository,
 {
     public async Task<List<Booking>> GetAllBookings()
     {
-        return await bookingRepository.GetAllBookings();
+        var bookings = await bookingRepository.GetAllBookings();
+        if (bookings.Count == 0) throw new NoBookingFoundException("!!! No bookings found !!!");
+        return bookings;
     }
 
     public async Task<Booking> GetBookingById(Guid bookingId)
@@ -18,12 +24,12 @@ public class BookingService (IBookingRepository bookingRepository,
         var booking = bookings.FirstOrDefault(b => b.Id == bookingId);
         if (booking is null)
         {
-            throw new BookingNotFound("Invalid booking Id");
+            throw new BookingNotFoundException("Invalid booking Id");
         }
         return booking;
     }
 
-    public async Task<List<BookingDetails>> GetFilteredBooking(BookingSearchParameters searchParameter, string value)
+    public async Task<List<BookingDetails>> GetFilteredBooking(BookingFilterOptions filterOption, string value)
     {
         if (string.IsNullOrEmpty(value))
         {
@@ -42,24 +48,19 @@ public class BookingService (IBookingRepository bookingRepository,
                 bf => bf.booking.PassengerId,
                 user => user.Id, 
                 (bf, user) => new BookingDetails(
+                    bf.booking.Id,
+                    bf.booking.BookingDate,
                     bf.booking.PassengerId, 
                     bf.booking.FlightId, 
                     bf.booking.FlightClass, 
-                    bf.booking.Price)
-                {
-                    Flight = bf.flight,
-                    User = user
-                }
+                    bf.booking.Price,
+                    bf.flight,
+                    user)
             ).ToList();
-        try
-        {
-            return bookingRepository.GetFilteredBookings(result, searchParameter, value);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
+        
+        var filteredBookings = bookingRepository.GetFilteredBookings(result, filterOption, value);
+        if (filteredBookings.Count == 0) throw new BookingNotFoundException("!!! No bookings found !!!");
+        return filteredBookings;
     }
 
     public async Task AddBooking(Booking booking)
@@ -67,7 +68,7 @@ public class BookingService (IBookingRepository bookingRepository,
         var bookings = await bookingRepository.GetAllBookings();
         if (bookings.Contains(booking))
         {
-            throw new BookingAlreadyExist("This Booing already exists");
+            throw new BookingAlreadyExistException("This Booing already exists");
         }
         await bookingRepository.AddBooking(booking);
     }
@@ -77,7 +78,7 @@ public class BookingService (IBookingRepository bookingRepository,
         var bookings = await bookingRepository.GetAllBookings();
         if (!bookings.Contains(booking))
         {
-            throw new BookingNotFound("Booking not found");
+            throw new BookingNotFoundException("Booking not found");
         }
 
         await bookingRepository.UpdateBooking(booking);
@@ -86,7 +87,7 @@ public class BookingService (IBookingRepository bookingRepository,
     public async Task DeleteBooking(Guid bookingId)
     {
         var booking = await GetBookingById(bookingId);
-        if (booking is null) throw new BookingNotFound("Booking not found");
+        if (booking is null) throw new BookingNotFoundException("Booking not found");
         await bookingRepository.CancelBooking(bookingId);
     }
 }

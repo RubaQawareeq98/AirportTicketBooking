@@ -1,9 +1,10 @@
 using System.Globalization;
 using CsvHelper;
+using Data.Exceptions;
 using Model;
 using Model.Flights;
 
-namespace Data;
+namespace Data.Flights;
 
 public class FlightRepository(string filePath, IFileRepository<Flight> fileRepository) : IFlightRepository
 {
@@ -75,20 +76,19 @@ public class FlightRepository(string filePath, IFileRepository<Flight> fileRepos
         await SavaFlights(flights);
     }
 
-    public async Task<ImportFlightResult> ImportFlights(string csvfFilePath)
+    public async Task<List<string>> ImportFlights(string csvFilePath)
     {
         var existFlights = await GetAllFlights();
-        var importFlightsResult = new ImportFlightResult();
+        var responses = new List<string>();
         try
         {
-            if (!File.Exists(csvfFilePath))
+            if (!File.Exists(csvFilePath))
             {
-                importFlightsResult.status = ImportFlightStatus.Failure;
-                importFlightsResult.errorMessages.Add("File does not exist");
-                return importFlightsResult;
+                responses.Add("File does not exist");
+                return responses;
             }
 
-            using var reader = new StreamReader(csvfFilePath);
+            using var reader = new StreamReader(csvFilePath);
             using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
             csv.Context.RegisterClassMap<FlightMap>(); 
             var flights = csv.GetRecords<Flight>().ToList();
@@ -97,18 +97,17 @@ public class FlightRepository(string filePath, IFileRepository<Flight> fileRepos
             {
                 if (existFlights.Contains(flight))
                 {
-                    importFlightsResult.status = ImportFlightStatus.InvalidFormat;
-                    importFlightsResult.errorMessages.Add("Flight already exists");
+                    responses.Add($"Flight with Id ={flight.Id} already exists");
                     continue;
                 }
-                var validationResult = ValidateFlight(flight);
-                if (!string.IsNullOrEmpty(validationResult))
+                var validator = new FlightValidator();  
+                var result = await validator.ValidateAsync(flight);
+                if (!result.IsValid)
                 {
-                    importFlightsResult.status = ImportFlightStatus.InvalidFormat;
-                    importFlightsResult.errorMessages.Add(validationResult);
-                    continue;
+                    return result.Errors.Select(e => e.ErrorMessage).ToList();
                 }
                 await AddFlight(flight);
+                responses.Add($"Flight with Id ={flight.Id} imported successfully");
             }
         }
         catch (FileNotFoundException e)
@@ -116,49 +115,39 @@ public class FlightRepository(string filePath, IFileRepository<Flight> fileRepos
             Console.WriteLine(e.Message);
             throw;
         }
-        return importFlightsResult;
+        return responses;
     }
 
-    public async Task<List<Flight>> GetFilteredFlights(FlightSearchParams searchParams, string value)
+    public async Task<List<Flight>> GetFilteredFlights(FlightFilterOptions filterOptions, string value)
     {
         var flights = await GetAllFlights();
-        return searchParams switch
+        return filterOptions switch
         {
-            FlightSearchParams.Id => Guid.TryParse(value, out var id)? flights.Where(flight => flight.Id == id).ToList() 
-            : throw new InvalidDataException("Invalid Flight Id."),
-            FlightSearchParams.DepartureCountry => flights.Where(flight => flight.DepartureCountry == value).ToList(),
-            FlightSearchParams.DestinationCountry => flights.Where(flight => flight.DestinationCountry == value).ToList(),
-            FlightSearchParams.DepartureDate => DateTime.TryParse(value, out var dateTime)
-                ? flights.Where(flight => flight.DepartureDate.Date == dateTime)
-                    .ToList()
-                : throw new InvalidDataException("Invalid Departure date value input."),
-            FlightSearchParams.DepartureAirport => flights.Where(flight => flight.DepartureAirport == value).ToList(),
-            FlightSearchParams.ArrivalAirport => flights.Where(flight => flight.ArrivalAirport == value).ToList(),
-            FlightSearchParams.Price => double.TryParse(value, out var price)
+            FlightFilterOptions.Id => Guid.TryParse(value, out var id)
+                ? flights.Where(flight => flight.Id == id).ToList()
+                : throw new InvalidDataException("Invalid Flight Id."),
+            
+            FlightFilterOptions.DepartureCountry => flights.Where(flight => flight.DepartureCountry == value).ToList(),
+            
+            FlightFilterOptions.DestinationCountry => flights.Where(flight => flight.DestinationCountry == value).ToList(),
+            
+            FlightFilterOptions.DepartureDate => DateTime.TryParse(value, out var dateTime)
+                ? flights.Where(flight => flight.DepartureDate.Date == dateTime).ToList()
+                : throw new InvalidDateFormatException(),
+            
+            FlightFilterOptions.DepartureAirport => flights.Where(flight => flight.DepartureAirport == value).ToList(),
+            
+            FlightFilterOptions.ArrivalAirport => flights.Where(flight => flight.ArrivalAirport == value).ToList(),
+            
+            FlightFilterOptions.Price => double.TryParse(value, out var price)
                 ? flights.Where(flight => flight.Prices.ContainsValue(price)).ToList()
                 : throw new InvalidDataException("Invalid Price value input."),
-            FlightSearchParams.Class => Enum.TryParse(typeof(FlightClass), value, true, out var flightClass)
+            
+            FlightFilterOptions.Class => Enum.TryParse(typeof(FlightClass), value, true, out var flightClass)
                 ? flights.Where(flight => flight.Prices.ContainsKey((FlightClass)flightClass)).ToList()
-                : throw new InvalidDataException("Invalid Flight class value input."),
+                : throw new InvalidClassException(),
+            
             _ => flights
         };
     }
-
-    private static string ValidateFlight(Flight flight)
-    {
-        if (string.IsNullOrEmpty(flight.DepartureCountry))
-            return $"Invalid Flight {flight.Id}: Departure country cannot be empty.";
-
-        if (string.IsNullOrEmpty(flight.DestinationCountry))
-            return $"Flight {flight.Id}: Destination country cannot be empty.";
-
-        if (string.IsNullOrEmpty(flight.DepartureAirport))
-            return $"Invalid Flight {flight.Id}: Departure airport cannot be empty.";
-
-        if (string.IsNullOrEmpty(flight.ArrivalAirport))
-            return $"Invalid Flight {flight.Id}: Arrival airport cannot be empty.";
-
-        return flight.DepartureDate.Date < DateTime.Now.Date ? $"Invalid Flight {flight.Id}: Departure date cannot be in the past." : string.Empty;
-    }
-
 }

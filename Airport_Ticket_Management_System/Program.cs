@@ -1,34 +1,82 @@
-﻿using Data;
-using Microsoft.Extensions.Configuration;
-using Model;
+﻿using Controllers;
+using Data;
+using Data.Bookings;
+using Data.Files;
+using Data.Flights;
+using Data.Users;
+using Model.Bookings;
+using Model.Users;
+using Services.Bookings;
+using Services.Flights;
+using Services.Users;
+using Views.Managers;
+using Views.Passengers;
+using Microsoft.Extensions.DependencyInjection;
+using Model.Flights;
+using Views;
 
 namespace Airport_Ticket_Management_System;
 
 class Program
 {
-    static async Task Main(string[] args)
+    static async Task Main()
     {
-        var configuration = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())  // Set base path
-            .AddJsonFile(@"C:\Users\Ruba\OneDrive\Desktop\BE\Airport_Ticket_Management_System\Airport_Ticket_Management_System\appsettings.json", optional: false, reloadOnChange: true)  // Load appsettings.json
-            .Build();
-        var directorySettings = new DirectorySettings();
-        configuration.GetSection("DirectorySettings").Bind(directorySettings);
-        
-        var filePath = Path.Combine(directorySettings.BaseDirectory,"flights.json");
-        IFileRepository<Flight> fileRepository = new FileRepository<Flight>();
-        var flightRepository = new FlightRepository(filePath, fileRepository);
-      // var result = await flightRepository.ImportFlights(@"C:\Users\Ruba\Downloads\Book.csv");
-      // var flight = await flightRepository.GetFlightById(new Guid("3da9efb3-185c-4233-bf4e-bbc0ece8548b"));
-      // flight.Prices[FlightClass.Business] = 5555;
-      // await flightRepository.UpdateFlight(flight);
 
-       // var id = new Guid("3da9efb3-185c-4233-bf4e-bbc0ece8548a");
-       // await flightRepository.DeleteFlight(id);
-        // foreach (var error in result.errorMessages)
-        // {
-        //     Console.WriteLine(error);
-        // }
-        Console.WriteLine("Hello, World!");
+
+        var filesPath = SettingsLoader.LoadFileSettings();
+
+        var services = new ServiceCollection();
+
+        services.AddSingleton(filesPath);
+
+        services.AddTransient<IFileRepository<User>, FileRepository<User>>();
+        services.AddTransient<IFileRepository<Booking>, FileRepository<Booking>>();
+        services.AddTransient<IFileRepository<Flight>, FileRepository<Flight>>();
+
+        services.AddTransient<IUserRepository, UserRepository>(provider =>
+            new UserRepository(filesPath.Users, provider.GetRequiredService<IFileRepository<User>>()));
+
+        services.AddTransient<IBookingRepository, BookingRepository>(provider =>
+            new BookingRepository(filesPath.Bookings, provider.GetRequiredService<IFileRepository<Booking>>()));
+
+        services.AddTransient<IFlightRepository, FlightRepository>(provider =>
+            new FlightRepository(filesPath.Flights, provider.GetRequiredService<IFileRepository<Flight>>()));
+
+        services.AddTransient<IBookingService, BookingService>();
+        services.AddTransient<IUserService, UserService>();
+        services.AddTransient<ICurrentUser, CurrentUser>();
+        services.AddTransient<IFlightService, FlightService>();
+
+        services.AddTransient<ILoginView, LoginView>();
+        services.AddTransient<IManagerView, ManagerView>();
+        services.AddTransient<IPassengerView, PassengerView>();
+
+        services.AddTransient<LoginController>();
+        services.AddTransient<ManagerController>();
+        services.AddTransient<PassengerController>();
+
+        var serviceProvider = services.BuildServiceProvider();
+        
+        var loginController = serviceProvider.GetRequiredService<LoginController>();
+        
+        try
+        {
+            var user = await loginController.Login();
+        
+            if (user.Role == UserRole.Manager)
+            {
+                var managerController = serviceProvider.GetRequiredService<ManagerController>();
+                await managerController.ManagePage();
+            }
+            else
+            {
+                var passengerController = serviceProvider.GetRequiredService<PassengerController>();
+                await passengerController.ShowPassengerPage();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
     }
 }

@@ -1,0 +1,11 @@
+[
+  {
+    "Id": "5cfd6cc5-6cc5-4f1e-bbea-0777edd2f975",
+    "PassengerId": "3da9efb3-185c-4233-bf4e-bbc0ece85481",
+    "FlightId": "3da9efb3-185c-4233-bf4e-bbc0ece8548c",
+    "BookingDate": "2025-03-04T20:18:17.9081788+02:00",
+    "FlightClass": 2,
+    "Price": 950,
+    "Cancelled": false
+  }
+]

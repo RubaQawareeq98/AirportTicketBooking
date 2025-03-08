@@ -9,6 +9,5 @@ public interface IBookingRepository
     Task UpdateBooking(Booking booking);
     Task CancelBooking(Guid bookingId);
     Task SaveBookings(List<Booking> bookings);
-    List<BookingDetails> GetFilteredBookings(List<BookingDetails> bookingDetails,
-        BookingSearchParameters searchParameters, string value);
+    List<BookingDetails> GetFilteredBookings(List<BookingDetails> bookingDetails, BookingFilterOptions filterOptions, string value);
 }

@@ -1,5 +1,5 @@
 using Model.Bookings;
-using Model.Users;
+using Model.Users.Exceptions;
 
 namespace Data.Bookings;
 
@@ -65,40 +65,51 @@ public class BookingRepository(string filePath, IFileRepository<Booking> fileRep
     }
 
     public List<BookingDetails> GetFilteredBookings(List<BookingDetails> bookingDetails,
-        BookingSearchParameters searchParameters, string value)
+        BookingFilterOptions filterOptions, string value)
     {
-        switch (searchParameters)
+        switch (filterOptions)
         {
-            case BookingSearchParameters.Id:
+            case BookingFilterOptions.Id:
                 if (Guid.TryParse(value, out var bookingId))
-                    return bookingDetails.Where(item => item.Flight.Id == bookingId).ToList();
+                    return bookingDetails.Where(item => item.Id == bookingId).ToList();
                 throw new InvalidOperationException("Invalid booking id");
-            case BookingSearchParameters.FlightId:
+            
+            case BookingFilterOptions.FlightId:
                 if (Guid.TryParse(value, out var flightId))
                     return bookingDetails.Where(item => item.Flight.Id == flightId).ToList();
                 throw new InvalidOperationException("Invalid flight id");
-            case BookingSearchParameters.BookingDate:
+            
+            case BookingFilterOptions.BookingDate:
                 if (DateTime.TryParse(value, out var bookingDate))
                     return bookingDetails.Where(item => item.BookingDate.Date == bookingDate.Date).ToList();
-                throw new InvalidOperationException("Invalid booking date");
-            case BookingSearchParameters.Cancelled:
+                throw new InvalidDateFormatException();
+            
+            case BookingFilterOptions.Cancelled:
                 return bookingDetails.Where(item => item.Cancelled).Select(item => item).ToList();
-            case BookingSearchParameters.DepartureDate:
+            
+            case BookingFilterOptions.DepartureDate:
                 if (DateTime.TryParse(value, out var departureDate))
                     return bookingDetails.Where(item => item.Flight.DepartureDate.Date == departureDate.Date).ToList();
-                break;
-            case BookingSearchParameters.DepartureCountry:
+                throw new InvalidDateFormatException();
+            
+            case BookingFilterOptions.DepartureCountry:
                 return bookingDetails.Where(item => item.Flight.DepartureCountry == value).Select(item => item).ToList();
-            case BookingSearchParameters.DestinationCountry:
+            
+            case BookingFilterOptions.DestinationCountry:
                 return bookingDetails.Where(item => item.Flight.DestinationCountry == value).Select(item => item).ToList();
-            case BookingSearchParameters.PassengerName:
+            
+            case BookingFilterOptions.PassengerName:
                 return bookingDetails.Where(item => item.User.FullName == value).Select(item => item).ToList();
-            case BookingSearchParameters.PassengerId:
+            
+            case BookingFilterOptions.PassengerId:
                 return bookingDetails.Where(item => item.PassengerId == Guid.Parse(value)).Select(item => item).ToList();
-            case BookingSearchParameters.ClassType:
+            
+            case BookingFilterOptions.ClassType:
                 return bookingDetails.Where(item => nameof(item.FlightClass) == value).Select(item => item).ToList();
-            case BookingSearchParameters.Price:
+            
+            case BookingFilterOptions.Price:
                 return bookingDetails.Where(item => Math.Abs(item.Price - double.Parse(value)) < 0).Select(item => item).ToList();
+            
             default:
                 Console.WriteLine("Please enter a valid option");
                 break;

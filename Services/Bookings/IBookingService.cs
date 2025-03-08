@@ -6,7 +6,7 @@ public interface IBookingService
 {
     Task<List<Booking>> GetAllBookings();
     Task<Booking> GetBookingById(Guid bookingId);
-    Task<List<BookingDetails>> GetFilteredBooking(BookingSearchParameters searchParameter, string value);
+    Task<List<BookingDetails>> GetFilteredBooking(BookingFilterOptions filterOption, string value);
     Task AddBooking(Booking booking);
     Task UpdateBooking(Booking booking);
     Task DeleteBooking(Guid bookingId);

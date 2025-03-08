@@ -2,6 +2,7 @@ using Data;
 using Data.Bookings;
 using Model.Bookings;
 using Model.Users;
+using Model.Users.Exceptions;
 
 namespace Services.Users;
 

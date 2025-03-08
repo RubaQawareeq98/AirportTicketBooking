@@ -1,13 +1,17 @@
-using Data;
+using Data.Flights;
 using Model;
+using Model.Flights;
+using Services.Flights.Exceptions;
 
 namespace Services.Flights;
 
-public class FlightService(FlightRepository flightRepository) : IFlightService
+public class FlightService(IFlightRepository flightRepository) : IFlightService
 {
     public async Task<List<Flight>> GetAllFlights()
     {
-        return await flightRepository.GetAllFlights();
+        var flights = await flightRepository.GetAllFlights();
+        if (flights.Count == 0) throw new FlightNotFoundException("!!! No flight was found !!!");
+        return flights;
     }
 
     public async Task<Flight> GetFlightById(Guid flightId)
@@ -21,9 +25,9 @@ public class FlightService(FlightRepository flightRepository) : IFlightService
         return flight;
     }
 
-    public async Task<List<Flight>> GetFilteredFlights(FlightSearchParams flightSearchParams, string value)
+    public async Task<List<Flight>> GetFilteredFlights(FlightFilterOptions flightFilterOptions, string value)
     {
-        var flights = await flightRepository.GetFilteredFlights(flightSearchParams, value);
+        var flights = await flightRepository.GetFilteredFlights(flightFilterOptions, value);
         if (flights.Count == 0)
         {
             throw new FlightNotFoundException("No Match flights found"); 
@@ -36,7 +40,7 @@ public class FlightService(FlightRepository flightRepository) : IFlightService
         var flights = await flightRepository.GetAllFlights();
         if (flights.Contains(flight))
         {
-            throw new FlightAlreadyExist("This flight already exists");
+            throw new FlightAlreadyExistException("This flight already exists");
         }
         await flightRepository.AddFlight(flight);
     }
@@ -54,12 +58,16 @@ public class FlightService(FlightRepository flightRepository) : IFlightService
 
     public async Task DeleteFlight(Guid flightId)
     {
-        var flight = await GetFlightById(flightId);
-        if (flight is null) throw new FlightNotFoundException("Flight not found");
+        var flights = await flightRepository.GetAllFlights();
+        var flight = flights.Find(f => f.Id == flightId);
+        if (flight is null)
+        {
+            throw new FlightNotFoundException($"Flight with id {flightId} not found");  
+        }
         await flightRepository.DeleteFlight(flightId);
     }
 
-    public async Task<ImportFlightResult> ImportFlight(string filePath)
+    public async Task<List<string>> ImportFlight(string filePath)
     {
         return await flightRepository.ImportFlights(filePath);
     }

@@ -1,7 +1,6 @@
-using Model;
 using Model.Users;
 
-namespace Data;
+namespace Data.Users;
 
 public class UserRepository(string filePath, IFileRepository<User> fileRepository) : IUserRepository
 {

@@ -1,6 +1,7 @@
 using Model;
+using Model.Flights;
 
-namespace Data;
+namespace Data.Flights;
 
 public interface IFlightRepository
 {
@@ -9,7 +10,7 @@ public interface IFlightRepository
     Task AddFlight(Flight flight);
     Task UpdateFlight(Flight flight);
     Task DeleteFlight(Guid id);
-    Task<ImportFlightResult> ImportFlights(string csvFilePath);
-    Task<List<Flight>> GetFilteredFlights(FlightSearchParams searchParams, string value);
+    Task<List<string>> ImportFlights(string csvFilePath);
+    Task<List<Flight>> GetFilteredFlights(FlightFilterOptions filterOptions, string value);
 
 }
