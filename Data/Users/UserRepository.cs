@@ -1,14 +1,16 @@
+using Airport_Ticket_Management_System;
 using Model.Users;
 
 namespace Data.Users;
 
-public class UserRepository(string filePath, IFileRepository<User> fileRepository) : IUserRepository
+public class UserRepository(FilePathSettings settings, IFileRepository<User> fileRepository) : IUserRepository
 {
+
     public async Task<List<User>> GetAllUsers()
     {
         try
         {
-            var users = await fileRepository.ReadDataFromFile(filePath);
+            var users = await fileRepository.ReadDataFromFile(settings.Users);
             return users;
         }
         catch (Exception ex)
@@ -36,7 +38,7 @@ public class UserRepository(string filePath, IFileRepository<User> fileRepositor
     {
         try
         {
-            await fileRepository.WriteDataToFile(filePath, users);
+            await fileRepository.WriteDataToFile(settings.Users, users);
         }
         catch (Exception ex)
         {

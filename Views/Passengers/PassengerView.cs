@@ -34,7 +34,7 @@ public class PassengerView : IPassengerView
         Console.WriteLine("Enter the option number you want to filter flights based on it");
         var option = Console.ReadLine();
         if (!int.TryParse(option, out var optionNumber)) throw new InvalidOptionException("Invalid option number");
-        if (optionNumber is < 1 or > 7) throw new InvalidOptionException("Invalid option number");
+        if (optionNumber is < 1 or > 8) throw new InvalidOptionException("Invalid option number");
         return (FlightFilterOptions)optionNumber;
     }
 

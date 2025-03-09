@@ -1,16 +1,17 @@
+using Airport_Ticket_Management_System;
 using Model.Bookings;
 using Model.Users.Exceptions;
 
 namespace Data.Bookings;
 
-public class BookingRepository(string filePath, IFileRepository<Booking> fileRepository) : IBookingRepository
+public class BookingRepository(FilePathSettings settings, IFileRepository<Booking> fileRepository) : IBookingRepository
 {
-    
+
     public async Task<List<Booking>> GetAllBookings()
     {
         try
         {
-            var bookings = await fileRepository.ReadDataFromFile(filePath);
+            var bookings = await fileRepository.ReadDataFromFile(settings.Bookings);
             return bookings;
         }
         catch (Exception ex)
@@ -55,7 +56,7 @@ public class BookingRepository(string filePath, IFileRepository<Booking> fileRep
     {
         try
         {
-            await fileRepository.WriteDataToFile(filePath, bookings);
+            await fileRepository.WriteDataToFile(settings.Bookings, bookings);
         }
         catch (Exception ex)
         {

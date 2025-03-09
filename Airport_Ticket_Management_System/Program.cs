@@ -23,25 +23,22 @@ class Program
     {
 
 
-        var filesPath = SettingsLoader.LoadFileSettings();
-
+        var filePaths = SettingsLoader.LoadFileSettings();
+        var flightValidator = new FlightValidator();
         var services = new ServiceCollection();
 
-        services.AddSingleton(filesPath);
+        services.AddSingleton(filePaths);
+        services.AddSingleton(flightValidator);
 
         services.AddTransient<IFileRepository<User>, FileRepository<User>>();
         services.AddTransient<IFileRepository<Booking>, FileRepository<Booking>>();
         services.AddTransient<IFileRepository<Flight>, FileRepository<Flight>>();
 
-        services.AddTransient<IUserRepository, UserRepository>(provider =>
-            new UserRepository(filesPath.Users, provider.GetRequiredService<IFileRepository<User>>()));
 
-        services.AddTransient<IBookingRepository, BookingRepository>(provider =>
-            new BookingRepository(filesPath.Bookings, provider.GetRequiredService<IFileRepository<Booking>>()));
-
-        services.AddTransient<IFlightRepository, FlightRepository>(provider =>
-            new FlightRepository(filesPath.Flights, provider.GetRequiredService<IFileRepository<Flight>>()));
-
+        services.AddTransient<IUserRepository, UserRepository>();
+        services.AddTransient<IBookingRepository, BookingRepository>();
+        services.AddTransient<IFlightRepository, FlightRepository>();
+        
         services.AddTransient<IBookingService, BookingService>();
         services.AddTransient<IUserService, UserService>();
         services.AddTransient<ICurrentUser, CurrentUser>();

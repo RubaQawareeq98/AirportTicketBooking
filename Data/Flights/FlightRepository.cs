@@ -1,4 +1,5 @@
 using System.Globalization;
+using Airport_Ticket_Management_System;
 using CsvHelper;
 using Data.Exceptions;
 using Model;
@@ -6,14 +7,14 @@ using Model.Flights;
 
 namespace Data.Flights;
 
-public class FlightRepository(string filePath, IFileRepository<Flight> fileRepository) : IFlightRepository
+public class FlightRepository(FilePathSettings settings, FlightValidator validator, IFileRepository<Flight> fileRepository) : IFlightRepository
 {
 
     public async Task<List<Flight>> GetAllFlights()
     {
         try
         {
-            var flights = await fileRepository.ReadDataFromFile(filePath);
+            var flights = await fileRepository.ReadDataFromFile(settings.Flights);
             return flights;
         }
         catch (Exception ex)
@@ -27,7 +28,7 @@ public class FlightRepository(string filePath, IFileRepository<Flight> fileRepos
     {
         try
         {
-            await fileRepository.WriteDataToFile(filePath, flights);
+            await fileRepository.WriteDataToFile(settings.Flights, flights);
         }
         catch (Exception ex)
         {
@@ -100,7 +101,6 @@ public class FlightRepository(string filePath, IFileRepository<Flight> fileRepos
                     responses.Add($"Flight with Id ={flight.Id} already exists");
                     continue;
                 }
-                var validator = new FlightValidator();  
                 var result = await validator.ValidateAsync(flight);
                 if (!result.IsValid)
                 {

@@ -14,7 +14,10 @@ public class BookingService (IBookingRepository bookingRepository,
     public async Task<List<Booking>> GetAllBookings()
     {
         var bookings = await bookingRepository.GetAllBookings();
-        if (bookings.Count == 0) throw new NoBookingFoundException("!!! No bookings found !!!");
+        if (bookings.Count == 0)
+        {
+            throw new NoBookingFoundException("!!! No bookings found !!!");
+        }
         return bookings;
     }
 

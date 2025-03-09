@@ -11,7 +11,7 @@ public class FileRepository<T> : IFileRepository<T>
         {
             if (!File.Exists(filePath))
             {
-                return [];
+                throw new FileNotFoundException($"File {filePath} not found");
             }
 
             var jsonString = await File.ReadAllTextAsync(filePath);
@@ -31,7 +31,7 @@ public class FileRepository<T> : IFileRepository<T>
         {
             if (!File.Exists(filePath))
             {
-                return ;
+                throw new FileNotFoundException($"File {filePath} not found.");
             }
             var options = new JsonSerializerOptions
             {
