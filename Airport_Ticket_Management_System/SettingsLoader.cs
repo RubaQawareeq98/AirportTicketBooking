@@ -1,3 +1,4 @@
+using Data;
 using Microsoft.Extensions.Configuration;
 
 namespace Airport_Ticket_Management_System;

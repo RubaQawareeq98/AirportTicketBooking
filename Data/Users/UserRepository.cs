@@ -1,4 +1,3 @@
-using Airport_Ticket_Management_System;
 using Model.Users;
 
 namespace Data.Users;

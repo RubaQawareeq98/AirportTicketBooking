@@ -1,4 +1,4 @@
-namespace Airport_Ticket_Management_System;
+namespace Data;
 
 public class FilePathSettings(string flights, string bookings, string users)
 {
