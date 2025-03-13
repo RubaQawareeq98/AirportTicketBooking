@@ -1,0 +1,80 @@
+[
+  {
+    "Id": "3da9efb3-185c-4233-bf4e-bbc0ece8548b",
+    "DepartureCountry": "7777",
+    "DestinationCountry": "UK",
+    "DepartureDate": "2025-03-15T10:30:00",
+    "DepartureAirport": "JFK",
+    "ArrivalAirport": "LHR",
+    "Prices": {
+      "Economy": 200,
+      "Business": 5555,
+      "First": 300
+    }
+  },
+  {
+    "Id": "3da9efb3-185c-4233-bf4e-bbc0ece8548a",
+    "DepartureCountry": "USA",
+    "DestinationCountry": "UK",
+    "DepartureDate": "2025-03-15T10:30:00",
+    "DepartureAirport": "JFK",
+    "ArrivalAirport": "LHR",
+    "Prices": {
+      "Economy": 200,
+      "Business": 500,
+      "First": 300
+    }
+  },
+  {
+    "Id": "3da9efb3-185c-4233-bf4e-bbc0ece8548c",
+    "DepartureCountry": "UAE",
+    "DestinationCountry": "India",
+    "DepartureDate": "2025-05-05T22:45:00",
+    "DepartureAirport": "DXB",
+    "ArrivalAirport": "DEL",
+    "Prices": {
+      "Economy": 180,
+      "Business": 450,
+      "First": 950
+    }
+  },
+  {
+    "Id": "3da9efb3-185c-4233-bf4e-bbc0ece85487",
+    "DepartureCountry": "Canada",
+    "DestinationCountry": "Japan",
+    "DepartureDate": "2025-06-20T08:15:00",
+    "DepartureAirport": "YYZ",
+    "ArrivalAirport": "NRT",
+    "Prices": {
+      "Economy": 220,
+      "Business": 550,
+      "First": 1050
+    }
+  },
+  {
+    "Id": "3da9efb3-185c-4233-bf4e-bbc0ece85481",
+    "DepartureCountry": "Italy",
+    "DestinationCountry": "Spain",
+    "DepartureDate": "2025-07-01T12:00:00",
+    "DepartureAirport": "FCO",
+    "ArrivalAirport": "MAD",
+    "Prices": {
+      "Economy": 130,
+      "Business": 380,
+      "First": 850
+    }
+  },
+  {
+    "Id": "3da9efb3-185c-4233-bf4e-bbc0ece85486",
+    "DepartureCountry": "Brazil",
+    "DestinationCountry": "Argentina",
+    "DepartureDate": "2025-08-12T18:30:00",
+    "DepartureAirport": "GRU",
+    "ArrivalAirport": "EZE",
+    "Prices": {
+      "Economy": 140,
+      "Business": 390,
+      "First": 870
+    }
+  }
+]
