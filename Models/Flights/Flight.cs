@@ -2,6 +2,7 @@ namespace Model.Flights;
 
 public class Flight
 { 
+    
     public required Guid Id { get; set; }
     public required string DepartureCountry { get; set; }
     public required string DestinationCountry { get; set; }

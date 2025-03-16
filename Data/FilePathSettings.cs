@@ -1,6 +1,6 @@
 namespace Data;
 
-public class FilePathSettings(string flights, string bookings, string users)
+public class FilePathSettings(string flights, string bookings, string users) : IFilePathSettings
 {
     public string Flights { get; init; } = flights;
     public string Bookings { get; init; } = bookings;

@@ -3,7 +3,7 @@ using Model.Users.Exceptions;
 
 namespace Data.Bookings;
 
-public class BookingRepository(FilePathSettings settings, IFileRepository<Booking> fileRepository) : IBookingRepository
+public class BookingRepository(IFilePathSettings settings, IFileRepository<Booking> fileRepository) : IBookingRepository
 {
 
     public async Task<List<Booking>> GetAllBookings()

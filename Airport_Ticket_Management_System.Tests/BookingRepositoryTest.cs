@@ -1,0 +1,126 @@
+using AutoFixture;
+using Data;
+using Data.Bookings;
+using FluentAssertions;
+using Model;
+using Model.Bookings;
+using Moq;
+
+namespace Airport_Ticket_Management_System.Tests;
+
+public class BookingRepositoryTest
+{
+    private readonly Mock<IFileRepository<Booking>> _mockFileRepository;
+    private readonly Fixture _fixture;
+    private readonly BookingRepository _bookingRepository;
+
+    public BookingRepositoryTest()
+    {
+        _mockFileRepository = new Mock<IFileRepository<Booking>>();
+        var mockFilePathSettings = new Mock<IFilePathSettings>();
+        _fixture = new Fixture();
+
+        mockFilePathSettings.Setup(s => s.Bookings).Returns("./appsettings.json");
+
+        _bookingRepository = new BookingRepository(
+            mockFilePathSettings.Object,
+            _mockFileRepository.Object);
+    }
+    
+    [Fact]
+    public async Task SaveBookings_ShouldSaveAllBookings()
+    {
+        // Arrange
+        var bookings = _fixture.CreateMany<Booking>(3).ToList(); 
+        
+        _mockFileRepository.Setup(repo => repo.WriteDataToFile(It.IsAny<string>(), bookings))
+            .Returns(Task.CompletedTask);
+
+        _mockFileRepository.Setup(repo => repo.ReadDataFromFile(It.IsAny<string>()))
+            .ReturnsAsync(bookings); 
+
+        // Act
+        await _bookingRepository.SaveBookings(bookings);
+        var retrievedBookings = await _bookingRepository.GetAllBookings();
+
+        // Assert
+        Assert.Equal(bookings, retrievedBookings);
+        _mockFileRepository.Verify(fileRepo => fileRepo.WriteDataToFile(It.IsAny<string>(), bookings), Times.Once);
+    }
+    
+    [Fact]
+    public async Task GetAllBookings_ShouldReturnAllBookings()
+    {
+        // Arrange
+        var bookings = _fixture.CreateMany<Booking>(3).ToList();
+        _mockFileRepository.Setup(repo => repo.ReadDataFromFile(It.IsAny<string>()))
+            .ReturnsAsync(bookings);
+
+        // Act
+        var result = await _bookingRepository.GetAllBookings();
+
+        // Assert
+        result.Should().BeEquivalentTo(bookings);
+        _mockFileRepository.Verify(fileRepo => fileRepo.ReadDataFromFile(It.IsAny<string>()), Times.Once);
+    }
+
+   [Fact]
+    public async Task UpdateBookings_ShouldUpdateBookings()
+    {
+        var bookings = _fixture.CreateMany<Booking>(3).ToList();
+        var modifiedBooking = bookings[0];
+        var newBookingClass = _fixture.Create<FlightClass>();
+        modifiedBooking.FlightClass = newBookingClass;
+        
+        _mockFileRepository.Setup(repo => repo.ReadDataFromFile(It.IsAny<string>()))
+            .ReturnsAsync(bookings);
+    
+        _mockFileRepository.Setup(repo => repo.WriteDataToFile(It.IsAny<string>(), It.IsAny<List<Booking>>()))
+            .Returns(Task.CompletedTask); 
+    
+        await _bookingRepository.UpdateBooking(modifiedBooking);
+        
+        // Assert
+        _mockFileRepository.Verify(repo => repo.ReadDataFromFile(It.IsAny<string>()), Times.Once);
+        _mockFileRepository.Verify(repo => repo.WriteDataToFile(It.IsAny<string>(), It.Is<List<Booking>>(f => 
+            f.Any(flight => flight.Id == modifiedBooking.Id && flight.FlightClass == newBookingClass)
+        )), Times.Once); 
+    }
+
+    [Fact]
+    public async Task CancelBooking_ShouldCancelBooking()
+    {
+        var bookings = _fixture.Build<Booking>()
+            .With(b => b.Cancelled, false)
+            .CreateMany(3)
+            .ToList();
+        var bookingId = bookings[0].Id;
+        bookings.ForEach(Console.WriteLine);
+
+        _mockFileRepository.Setup(repo => repo.ReadDataFromFile(It.IsAny<string>()))
+            .ReturnsAsync(bookings);
+
+        _mockFileRepository.Setup(repo => repo.WriteDataToFile(It.IsAny<string>(), It.IsAny<List<Booking>>()))
+            .Returns(Task.CompletedTask);
+
+        await _bookingRepository.CancelBooking(bookingId);
+        // Assert
+        _mockFileRepository.Verify(repo => repo.ReadDataFromFile(It.IsAny<string>()), Times.Once);
+        _mockFileRepository.Verify(repo => repo.WriteDataToFile(It.IsAny<string>(), It.Is<List<Booking>>(f => 
+            f.Any(booking => booking.Id == bookingId && booking.Cancelled == true)
+        )), Times.Once); 
+
+    }
+
+    
+    [Fact]
+    public void FilterBookings_ShouldReturnFilteredBookings()
+    {
+        var bookingDetails = _fixture.CreateMany<BookingDetails>(3).ToList();
+        var filterValue = bookingDetails[0].Flight.DepartureCountry;
+    
+        var filteredBookings = _bookingRepository.GetFilteredBookings(bookingDetails, BookingFilterOptions.DepartureCountry, filterValue);
+        Assert.Single(filteredBookings);
+    }
+    
+}
