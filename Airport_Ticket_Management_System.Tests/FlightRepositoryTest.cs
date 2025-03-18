@@ -21,7 +21,7 @@ public class FlightRepositoryTest
         var mockFilePathSettings = new Mock<IFilePathSettings>();
         _fixture = new Fixture();
 
-        mockFilePathSettings.Setup(s => s.Flights).Returns("./appsettings.json");
+        mockFilePathSettings.Setup(s => s.Flights).Returns("./flights.json");
 
         _flightRepository = new FlightRepository(
             mockFilePathSettings.Object,
@@ -43,10 +43,10 @@ public class FlightRepositoryTest
 
         // Act
         await _flightRepository.SaveFlights(flights);
-        var retrievedFlights = await _flightRepository.GetAllFlights();
+        var result = await _flightRepository.GetAllFlights();
 
         // Assert
-        Assert.Equal(flights, retrievedFlights);
+        result.Should().BeEquivalentTo(flights);
         _mockFileRepository.Verify(fileRepo => fileRepo.WriteDataToFile(It.IsAny<string>(), flights), Times.Once);
     }
     
@@ -153,5 +153,4 @@ public class FlightRepositoryTest
         var filteredFlights = await _flightRepository.GetFilteredFlights(FlightFilterOptions.DepartureCountry, "Germany");
         Assert.Single(filteredFlights);
     }
-    
 }

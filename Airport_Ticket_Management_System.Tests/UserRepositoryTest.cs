@@ -19,7 +19,7 @@ public class UserRepositoryTest
         var mockFilePathSettings = new Mock<IFilePathSettings>();
         _fixture = new Fixture();
 
-        mockFilePathSettings.Setup(s => s.Users).Returns("./appsettings.json");
+        mockFilePathSettings.Setup(s => s.Users).Returns("./users.json");
 
         _userRepository = new UserRepository(
             mockFilePathSettings.Object,

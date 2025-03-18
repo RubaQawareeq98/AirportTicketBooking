@@ -20,7 +20,7 @@ public class BookingRepositoryTest
         var mockFilePathSettings = new Mock<IFilePathSettings>();
         _fixture = new Fixture();
 
-        mockFilePathSettings.Setup(s => s.Bookings).Returns("./appsettings.json");
+        mockFilePathSettings.Setup(s => s.Bookings).Returns("./bookings.json");
 
         _bookingRepository = new BookingRepository(
             mockFilePathSettings.Object,
@@ -41,10 +41,10 @@ public class BookingRepositoryTest
 
         // Act
         await _bookingRepository.SaveBookings(bookings);
-        var retrievedBookings = await _bookingRepository.GetAllBookings();
+        var result = await _bookingRepository.GetAllBookings();
 
         // Assert
-        Assert.Equal(bookings, retrievedBookings);
+        result.Should().BeEquivalentTo(bookings);
         _mockFileRepository.Verify(fileRepo => fileRepo.WriteDataToFile(It.IsAny<string>(), bookings), Times.Once);
     }
     
@@ -82,8 +82,8 @@ public class BookingRepositoryTest
         
         // Assert
         _mockFileRepository.Verify(repo => repo.ReadDataFromFile(It.IsAny<string>()), Times.Once);
-        _mockFileRepository.Verify(repo => repo.WriteDataToFile(It.IsAny<string>(), It.Is<List<Booking>>(f => 
-            f.Any(flight => flight.Id == modifiedBooking.Id && flight.FlightClass == newBookingClass)
+        _mockFileRepository.Verify(repo => repo.WriteDataToFile(It.IsAny<string>(), It.Is<List<Booking>>(b => 
+            b.Any(booking => booking.Id == modifiedBooking.Id && booking.FlightClass == newBookingClass)
         )), Times.Once); 
     }
 
@@ -95,7 +95,6 @@ public class BookingRepositoryTest
             .CreateMany(3)
             .ToList();
         var bookingId = bookings[0].Id;
-        bookings.ForEach(Console.WriteLine);
 
         _mockFileRepository.Setup(repo => repo.ReadDataFromFile(It.IsAny<string>()))
             .ReturnsAsync(bookings);
