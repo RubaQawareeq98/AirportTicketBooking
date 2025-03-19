@@ -11,13 +11,14 @@ namespace Airport_Ticket_Management_System.Tests;
 public class FlightRepositoryTest
 {
     private readonly Mock<IFileRepository<Flight>> _mockFileRepository;
+    private readonly Mock<FlightValidator> _mockFlightValidator;
     private readonly Fixture _fixture;
     private readonly FlightRepository _flightRepository;
 
     public FlightRepositoryTest()
     {
         _mockFileRepository = new Mock<IFileRepository<Flight>>();
-        var mockFlightValidator = new Mock<FlightValidator>();
+        _mockFlightValidator = new Mock<FlightValidator>();
         var mockFilePathSettings = new Mock<IFilePathSettings>();
         _fixture = new Fixture();
 
@@ -25,7 +26,7 @@ public class FlightRepositoryTest
 
         _flightRepository = new FlightRepository(
             mockFilePathSettings.Object,
-            mockFlightValidator.Object,
+            new FlightValidator(),
             _mockFileRepository.Object);
     }
     
@@ -153,4 +154,154 @@ public class FlightRepositoryTest
         var filteredFlights = await _flightRepository.GetFilteredFlights(FlightFilterOptions.DepartureCountry, "Germany");
         Assert.Single(filteredFlights);
     }
+    
+    [Fact]
+    public async Task ImportFlights_ShouldReturnError_WhenFileDoesNotExist()
+    {
+        // Arrange
+        var filePath = _fixture.Create<string>();
+        
+        // Act
+        var result = await _flightRepository.ImportFlights(filePath);
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal("File does not exist", result[0]);
+    }
+    
+    [Fact]
+    public async Task ImportFlights_ShouldReturnEmptyList_WhenFileIsEmpty()
+    {
+        // Arrange
+        var validCsvPath = _fixture.Create<string>();
+        await File.WriteAllTextAsync(validCsvPath, "");
+        
+        // Act
+        var result = await _flightRepository.ImportFlights(validCsvPath);
+
+        // Assert
+        Assert.Empty(result); 
+    }
+    
+    [Fact]
+    public async Task ImportFlights_ShouldReturnError_WhenFlightAlreadyExists()
+    {
+        // Arrange
+        var validCsvPath = _fixture.Create<string>();
+        var flight = new Flight
+        {
+            Id = new Guid("3da9efb3-185c-4233-bf4e-bbc0ece85483"),
+            DepartureCountry = "USA",
+            DestinationCountry = "UK",
+            DepartureDate = new DateTime(2025, 02, 015),
+            ArrivalAirport = "JFK",
+            Prices = new Dictionary<FlightClass, double>
+            {
+                [FlightClass.Business]= 200,
+                [FlightClass.Economy]= 500,
+                [FlightClass.First]= 300
+            },
+            DepartureAirport = "LHK"
+        };
+
+
+        const string csvContent =
+            "Id,DepartureCountry,DestinationCountry,DepartureDate,DepartureAirport,ArrivalAirport,EconomyPrice,BusinessPrice,FirstClassPrice\n" +
+            "3da9efb3-185c-4233-bf4e-bbc0ece85483,USA,UK,2025-02-15 10:30,JFK,LHR,200.00,500.00,300\n";
+        await File.WriteAllTextAsync(validCsvPath, csvContent);
+
+        _mockFileRepository.Setup(repo => repo.ReadDataFromFile(It.IsAny<string>()))
+            .ReturnsAsync([flight]);
+
+        // Act
+        var result = await _flightRepository.ImportFlights(validCsvPath);
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal($"Flight with Id ={flight.Id} already exists", result[0]);
+    }
+    
+    [Fact]
+    public async Task ImportFlights_ShouldReturnError_WhenFlightIsInvalid()
+    {
+        // Arrange
+        var validCsvPath = _fixture.Create<string>(); // Generate fake file path
+        var flight = new Flight
+        {
+            Id = new Guid("3da9efb3-185c-4233-bf4e-bbc0ece85485"),
+            DepartureCountry = "", // INVALID (Empty)
+            DestinationCountry = "UK",
+            DepartureDate = new DateTime(2025, 05, 15), // Date was incorrect (015)
+            ArrivalAirport = "JFK",
+            Prices = new Dictionary<FlightClass, double>
+            {
+                [FlightClass.Business] = 200,
+                [FlightClass.Economy] = 500,
+                [FlightClass.First] = 300
+            },
+            DepartureAirport = "LHK"
+        };
+
+        const string csvContent =
+            "Id,DepartureCountry,DestinationCountry,DepartureDate,DepartureAirport,ArrivalAirport,EconomyPrice,BusinessPrice,FirstClassPrice\n" +
+            "3da9efb3-185c-4233-bf4e-bbc0ece85483,,UK,2025-04-15 10:30,JFK,LHR,200.00,500.00,300\n";
+        await File.WriteAllTextAsync(validCsvPath, csvContent);
+
+        _mockFileRepository.Setup(repo => repo.ReadDataFromFile(It.IsAny<string>()))
+            .ReturnsAsync([flight]);
+
+        // _mockFlightValidator.Setup(validator => validator.ValidateAsync(It.IsAny<Flight>(), It.IsAny<CancellationToken>())) // ✅ FIXED
+        //     .ReturnsAsync(new FluentValidation.Results.ValidationResult(new List<FluentValidation.Results.ValidationFailure>
+        //     {
+        //         new("DepartureCountry", "Departure country is required.") // ✅ MATCHES ASSERTION
+        //     }));
+
+
+        // Act
+        var result = await _flightRepository.ImportFlights(validCsvPath);
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal("Departure country is required.", result[0]); // ✅ MATCHES MOCKED ERROR MESSAGE
+    }
+
+    [Fact]
+    public async Task ImportFlights_ShouldImportFlightsSuccessfully()
+    {
+        // Arrange
+        var flight = new Flight
+        {
+            Id = new Guid("3da9efb3-185c-4233-bf4e-bbc0ece85485"),
+            DepartureCountry = "AMK", // INVALID (Empty)
+            DestinationCountry = "UK",
+            DepartureDate = new DateTime(2025, 05, 15), // Date was incorrect (015)
+            ArrivalAirport = "JFK",
+            Prices = new Dictionary<FlightClass, double>
+            {
+                [FlightClass.Business] = 200,
+                [FlightClass.Economy] = 500,
+                [FlightClass.First] = 300
+            },
+            DepartureAirport = "LHK"
+        };
+        var validCsvPath = _fixture.Create<string>();
+        const string csvContent =
+            "Id,DepartureCountry,DestinationCountry,DepartureDate,DepartureAirport,ArrivalAirport,EconomyPrice,BusinessPrice,FirstClassPrice\n" +
+            "3da9efb3-185c-4233-bf4e-bbc0ece85483,USA,UK,2025-04-15 10:30,JFK,LHR,200.00,500.00,300\n";        File.WriteAllText(validCsvPath, csvContent);
+
+        _mockFileRepository.Setup(repo => repo.ReadDataFromFile(It.IsAny<string>()))
+            .ReturnsAsync([flight]);        
+      
+      //  _mockFlightRepo.Setup(repo => repo.AddFlight(It.IsAny<Flight>())).Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _flightRepository.ImportFlights(validCsvPath);
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal($"Flight with Id =3da9efb3-185c-4233-bf4e-bbc0ece85483 imported successfully", result[0]);
+    }
+
+    
+    
 }

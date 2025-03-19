@@ -3,15 +3,16 @@ using Model;
 using Model.Bookings;
 using Model.Flights;
 using Services.Bookings.Exceptions;
+using Views.Consoles;
 
 namespace Views.Passengers;
 
-public class PassengerView : IPassengerView
+public class PassengerView (IConsoleService consoleService): IPassengerView
 {
     public PassengerOptions ShowPassengerMainMenu()
     {
             ShowPassengerOptions();
-            var option = Console.ReadLine();
+            var option = consoleService.ReadLine();
             if (!int.TryParse(option, out var optionNumber)) throw new InvalidOptionException("Invalid option number");
             if (optionNumber is < 1 or > 7) throw new InvalidOptionException("Invalid option number");
             return (PassengerOptions)optionNumber;
@@ -19,20 +20,20 @@ public class PassengerView : IPassengerView
 
     public void ShowFilterOptions()
     {
-        Console.WriteLine("If you want to filter flights based on Flight ID press 1");
-        Console.WriteLine("If you want to filter flights based on departure Country press 2");
-        Console.WriteLine("If you want to filter flights based on destination Country press 3");
-        Console.WriteLine("If you want to filter flights based on departure date press 4");
-        Console.WriteLine("If you want to filter flights based on departure airport press 5");
-        Console.WriteLine("If you want to filter flights based on arrival airport press 6");
-        Console.WriteLine("If you want to filter flights based on price press 7");
-        Console.WriteLine("If you want to filter flights based on class press 8");
+        consoleService.WriteLine("If you want to filter flights based on Flight ID press 1");
+        consoleService.WriteLine("If you want to filter flights based on departure Country press 2");
+        consoleService.WriteLine("If you want to filter flights based on destination Country press 3");
+        consoleService.WriteLine("If you want to filter flights based on departure date press 4");
+        consoleService.WriteLine("If you want to filter flights based on departure airport press 5");
+        consoleService.WriteLine("If you want to filter flights based on arrival airport press 6");
+        consoleService.WriteLine("If you want to filter flights based on price press 7");
+        consoleService.WriteLine("If you want to filter flights based on class press 8");
     }
 
     public FlightFilterOptions ReadFilterOptions()
     {
-        Console.WriteLine("Enter the option number you want to filter flights based on it");
-        var option = Console.ReadLine();
+        consoleService.WriteLine("Enter the option number you want to filter flights based on it");
+        var option = consoleService.ReadLine();
         if (!int.TryParse(option, out var optionNumber)) throw new InvalidOptionException("Invalid option number");
         if (optionNumber is < 1 or > 8) throw new InvalidOptionException("Invalid option number");
         return (FlightFilterOptions)optionNumber;
@@ -40,8 +41,8 @@ public class PassengerView : IPassengerView
 
     public string ReadFilterValue()
     {
-        Console.WriteLine("Enter value you looking for");
-        var value = Console.ReadLine();
+        consoleService.WriteLine("Enter value you looking for");
+        var value = consoleService.ReadLine();
         if (string.IsNullOrEmpty(value))
         {
             throw new InvalidDataException("Invalid option");
@@ -49,50 +50,55 @@ public class PassengerView : IPassengerView
         return value;
     }
     
-    private static void ShowPassengerOptions()
+    private void ShowPassengerOptions()
     {
-        Console.WriteLine("If you want to view available flights press 1");
-        Console.WriteLine("If you want to filter flights press 2");
-        Console.WriteLine("If you want to book a flight press 3");
-        Console.WriteLine("If you want to see your bookings press 4");
-        Console.WriteLine("If you want to Cancel booking press 5");
-        Console.WriteLine("If you want to modify booking press 6");
-        Console.WriteLine("If you want to exit press 7");
+        consoleService.WriteLine("If you want to view available flights press 1");
+        consoleService.WriteLine("If you want to filter flights press 2");
+        consoleService.WriteLine("If you want to book a flight press 3");
+        consoleService.WriteLine("If you want to see your bookings press 4");
+        consoleService.WriteLine("If you want to Cancel booking press 5");
+        consoleService.WriteLine("If you want to modify booking press 6");
+        consoleService.WriteLine("If you want to exit press 7");
     }
 
     public void ShowFlights(List<Flight> flights)
     {
-        Console.WriteLine($"{"".PadLeft(150, '=')}");
-        Console.WriteLine($"| {"ID",-5} | {"Departure Country",-8} | {"Destination Country",-8} " +
+        consoleService.WriteLine($"{"".PadLeft(150, '=')}");
+        consoleService.WriteLine($"| {"ID",-5} | {"Departure Country",-8} | {"Destination Country",-8} " +
                           $"| {"Departure Date",-20} | {"Departure Airport",-8} | {"Arrival Airport",-8} |" +
                           $" {"Economy Class", -16} | {"Business Class", -16} | {"First Class",-16}");
-        Console.WriteLine($"{"".PadLeft(150, '=')}");
-        flights.ForEach(Console.WriteLine);
-        Console.WriteLine($"{"".PadLeft(150, '=')}");
+        consoleService.WriteLine($"{"".PadLeft(150, '=')}");
+        foreach (var flight in flights)
+        {
+            consoleService.WriteLine(flight.ToString());
+        }
+        consoleService.WriteLine($"{"".PadLeft(150, '=')}");
     }
 
     public void ShowBookings(List<Booking> bookings)
     {
-        Console.WriteLine($"{"".PadLeft(170, '=')}");
-        Console.WriteLine($"| {"ID",-5} | {"Passenger Id", -8} |2 {"Flight Id",-8} | {"Booking Date",-8} " +
+        consoleService.WriteLine($"{"".PadLeft(170, '=')}");
+        consoleService.WriteLine($"| {"ID",-5} | {"Passenger Id", -8} |2 {"Flight Id",-8} | {"Booking Date",-8} " +
                           $"| {"Flight Class",-20} | {"Price",-8} | {"Cancelled?",-8} |");
                              
-        Console.WriteLine($"{"".PadLeft(170, '=')}");
-        bookings.ForEach(Console.WriteLine);
-        Console.WriteLine($"{"".PadLeft(170, '=')}");
+        consoleService.WriteLine($"{"".PadLeft(170, '=')}");
+        foreach (var booking in bookings)
+        {
+            consoleService.WriteLine(booking.ToString());
+        }        consoleService.WriteLine($"{"".PadLeft(170, '=')}");
     }
 
-    public static Guid ReadFlightId()
+    public Guid ReadFlightId()
     {
-        Console.WriteLine("Enter The flight ID you want to book");
-        return Guid.TryParse(Console.ReadLine(), out var flightId)? flightId : throw new BookingNotFoundException("Invalid booking id");
+        consoleService.WriteLine("Enter The flight ID you want to book");
+        return Guid.TryParse(consoleService.ReadLine(), out var flightId)? flightId : throw new BookingNotFoundException("Invalid booking id");
 
     }
 
-    public static FlightClass ReadFlightClass()
+    public FlightClass ReadFlightClass()
     {
-        Console.WriteLine("Enter the flight class you want to book [Economy | Business | First]");
-        var value = Console.ReadLine();
+        consoleService.WriteLine("Enter the flight class you want to book [Economy | Business | First]");
+        var value = consoleService.ReadLine();
 
         if (string.IsNullOrEmpty(value) || !Enum.TryParse(value, true, out FlightClass flightClass))
         {
@@ -101,10 +107,9 @@ public class PassengerView : IPassengerView
         return flightClass;
     }
 
-    public static Guid ReadBookingId()
+    public Guid ReadBookingId()
     {
-        Console.WriteLine("Enter the ID of the booking you want to cancel");
-        return Guid.TryParse(Console.ReadLine(), out var bookingId)? bookingId : throw new BookingNotFoundException("Invalid booking id");
+        consoleService.WriteLine("Enter the ID of the booking you want to cancel");
+        return Guid.TryParse(consoleService.ReadLine(), out var bookingId)? bookingId : throw new BookingNotFoundException("Invalid booking id");
     }
-  
 }

@@ -4,6 +4,7 @@ using Data.Bookings;
 using FluentAssertions;
 using Model;
 using Model.Bookings;
+using Model.Users.Exceptions;
 using Moq;
 
 namespace Airport_Ticket_Management_System.Tests;
@@ -11,7 +12,7 @@ namespace Airport_Ticket_Management_System.Tests;
 public class BookingRepositoryTest
 {
     private readonly Mock<IFileRepository<Booking>> _mockFileRepository;
-    private readonly Fixture _fixture;
+    private readonly IFixture _fixture;
     private readonly BookingRepository _bookingRepository;
 
     public BookingRepositoryTest()
@@ -86,6 +87,29 @@ public class BookingRepositoryTest
             b.Any(booking => booking.Id == modifiedBooking.Id && booking.FlightClass == newBookingClass)
         )), Times.Once); 
     }
+    
+    [Fact]
+    public async Task UpdateBookings_ShouldNotUpdateBookings()
+    {
+        var bookings = _fixture.CreateMany<Booking>(3).ToList();
+        var modifiedBooking = _fixture.Create<Booking>();
+        var newBookingClass = _fixture.Create<FlightClass>();
+        modifiedBooking.FlightClass = newBookingClass;
+        
+        _mockFileRepository.Setup(repo => repo.ReadDataFromFile(It.IsAny<string>()))
+            .ReturnsAsync(bookings);
+    
+        _mockFileRepository.Setup(repo => repo.WriteDataToFile(It.IsAny<string>(), It.IsAny<List<Booking>>()))
+            .Returns(Task.CompletedTask); 
+    
+        await _bookingRepository.UpdateBooking(modifiedBooking);
+        
+        // Assert
+        _mockFileRepository.Verify(repo => repo.ReadDataFromFile(It.IsAny<string>()), Times.Once);
+        _mockFileRepository.Verify(repo => repo.WriteDataToFile(It.IsAny<string>(), It.Is<List<Booking>>(b => 
+            b.Any(booking => booking.Id == modifiedBooking.Id && booking.FlightClass == newBookingClass)
+        )), Times.Never); 
+    }
 
     [Fact]
     public async Task CancelBooking_ShouldCancelBooking()
@@ -108,6 +132,26 @@ public class BookingRepositoryTest
         _mockFileRepository.Verify(repo => repo.WriteDataToFile(It.IsAny<string>(), It.Is<List<Booking>>(f => 
             f.Any(booking => booking.Id == bookingId && booking.Cancelled == true)
         )), Times.Once); 
+
+    }
+    
+    [Fact]
+    public async Task CancelBooking_ShouldNotCancelBooking()
+    {
+        var bookings = _fixture.Build<Booking>()
+            .With(b => b.Cancelled, false)
+            .CreateMany(3)
+            .ToList();
+        var bookingId = _fixture.Create<Guid>();
+
+        _mockFileRepository.Setup(repo => repo.ReadDataFromFile(It.IsAny<string>()))
+            .ReturnsAsync(bookings);
+
+        _mockFileRepository.Setup(repo => repo.WriteDataToFile(It.IsAny<string>(), It.IsAny<List<Booking>>()))
+            .Returns(Task.CompletedTask);
+
+        // Assert
+        await Assert.ThrowsAsync<NoBookingFoundException>(() => _bookingRepository.CancelBooking(bookingId));
 
     }
 
