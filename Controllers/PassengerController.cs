@@ -4,15 +4,13 @@ using Services.Bookings;
 using Services.Flights;
 using Services.Flights.Exceptions;
 using Services.Users;
-using Views.Consoles;
 using Views.Passengers;
 
 namespace Controllers;
 
-public class PassengerController( IFlightService flightService,
+public class PassengerController(IPassengerView passengerView,  IFlightService flightService,
     IUserService userService, ICurrentUser currentUser, IBookingService bookingService)
 {
-    private IPassengerView passengerView = new PassengerView(new ConsoleService());
 
     public async Task ShowPassengerPage()
     {
@@ -162,5 +160,4 @@ public class PassengerController( IFlightService flightService,
             Console.WriteLine(exp.Message);
         }
     }
-
 }

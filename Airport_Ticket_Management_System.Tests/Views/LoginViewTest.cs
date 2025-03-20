@@ -16,7 +16,7 @@ public class LoginViewTest
     {
         _fixture = new Fixture().Customize(new AutoMoqCustomization());
         _consoleServiceMock = _fixture.Freeze<Mock<IConsoleService>>();
-        _view = new LoginView(_consoleServiceMock.Object); // Explicitly inject mock
+        _view = new LoginView(_consoleServiceMock.Object); 
     }
 
     [Fact]
