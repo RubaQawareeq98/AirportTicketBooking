@@ -1,4 +1,5 @@
 using Data.Exceptions;
+using Data.Files;
 using Model.Bookings;
 using Model.Users.Exceptions;
 

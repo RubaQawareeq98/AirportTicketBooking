@@ -20,7 +20,7 @@ namespace Airport_Ticket_Management_System;
 
 class Program
 {
-    static async Task Main()
+    private static async Task Main()
     {
 
         var filePaths = SettingsLoader.LoadFileSettings();

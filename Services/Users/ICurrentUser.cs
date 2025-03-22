@@ -4,5 +4,5 @@ namespace Services.Users;
 
 public interface ICurrentUser
 {
-    User User { get; set; }
+    User User { get; }
 }

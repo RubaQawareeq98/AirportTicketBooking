@@ -1,6 +1,7 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
 using Data;
+using Data.Files;
 using Data.Users;
 using FluentAssertions;
 using Model.Users;

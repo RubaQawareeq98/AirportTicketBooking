@@ -3,7 +3,6 @@ using Views.Consoles;
 using Views.Passengers;
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using Model;
 using Model.Bookings;
 using Model.Flights;
 using Data.Exceptions;

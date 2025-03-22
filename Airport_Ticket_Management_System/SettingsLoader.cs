@@ -3,7 +3,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Airport_Ticket_Management_System;
 
-public class SettingsLoader
+public abstract class SettingsLoader
 {
     public static FilePathSettings LoadFileSettings()
     {

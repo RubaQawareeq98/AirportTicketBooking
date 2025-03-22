@@ -1,7 +1,7 @@
 using System.Globalization;
 using CsvHelper;
 using Data.Exceptions;
-using Model;
+using Data.Files;
 using Model.Flights;
 
 namespace Data.Flights;

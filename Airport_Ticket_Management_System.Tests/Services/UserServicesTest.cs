@@ -1,73 +1,90 @@
 using AutoFixture;
-using Data;
-using Data.Bookings;
-using Model.Bookings;
+using FluentAssertions;
 using Model.Users;
 using Model.Users.Exceptions;
-using Moq;
-using Services.Users;
 
 namespace Airport_Ticket_Management_System.Tests.Services;
 
-public class UserServicesTest
+public class UserServicesTest : TestBase
 {
-    private readonly Mock<IUserRepository> _userRepoMock;
-    private readonly Mock<IBookingRepository> _bookingRepoMock;
-    private readonly UserService _userService;
-    private readonly Fixture _fixture;
-    
-
-    public UserServicesTest()
-    {
-        _userRepoMock = new Mock<IUserRepository>();
-        _bookingRepoMock = new Mock<IBookingRepository>();
-        _userService = new UserService(_userRepoMock.Object, _bookingRepoMock.Object);
-        _fixture = new Fixture();
-    }
-
+    private readonly Fixture _fixture = new();
 
     [Fact]
     public async Task ValidateUserLogin_ShouldReturnUser()
     {
-        var users = _fixture.CreateMany<User>(3).ToList();
-        var user = users.First();
-        _userRepoMock.Setup(repo => repo.GetAllUsers()).ReturnsAsync(users);
-        
-        var currentUser = await _userService.ValidateUser(user.UserName, user.Password);
-        
-        Assert.Equal(user.UserName, currentUser.UserName);
+        // Arrange
+        const string userName = "ruba";
+        const string password = "123456";
+
+        // Act
+        var currentUser = await UserService.ValidateUser(userName, password);
+
+        // Assert
+        currentUser.Should().NotBeNull();
+        currentUser.Should().BeOfType<User>();
     }
-    
+
     [Fact]
     public async Task ValidateUserLogin_ShouldThrowException()
     {
-        var fixture = new Fixture();
-        var users = fixture.CreateMany<User>(3).ToList();
-        var user = fixture.Create<User>();
-        
-        _userRepoMock.Setup(repo => repo.GetAllUsers()).ReturnsAsync(users);
-        
-        await Assert.ThrowsAsync<UserNotFoundException>(() => _userService.ValidateUser(user.UserName, user.Password));
+        // Arrange
+        var userName = _fixture.Create<string>();
+        var password = _fixture.Create<string>();
+
+        // Act & Assert
+        var act = async () => await UserService.ValidateUser(userName, password);
+        await act.Should().ThrowAsync<UserNotFoundException>()
+            .WithMessage("Invalid username or password");
     }
 
     [Fact]
     public async Task GetUserBookings_ShouldReturnUserBookings()
     {
-        var bookings = _fixture.CreateMany<Booking>(3).ToList();
-        _bookingRepoMock.Setup(repo => repo.GetAllBookings()).ReturnsAsync(bookings);
-        var userId = bookings.First().PassengerId;
-        
-        var userBookings = await _userService.GetPassengerBookings(userId);
-        
-        Assert.Single(userBookings);
+        // Arrange
+        var userId = new Guid("3da9efb3-185c-4233-bf4e-bbc0ece85484");
+
+        // Act
+        var userBookings = await UserService.GetPassengerBookings(userId);
+
+        // Arrange
+        userBookings.Should().NotBeNull();
+        userBookings.Should().ContainSingle();
     }
-    
+
     [Fact]
     public async Task GetUserBookings_ShouldThrowException()
     {
-        var bookings = _fixture.CreateMany<Booking>(3).ToList();
-        _bookingRepoMock.Setup(repo => repo.GetAllBookings()).ReturnsAsync(bookings);
+        // Arrange
         var userId = _fixture.Create<Guid>();
-        await Assert.ThrowsAsync<NoBookingFoundException>(() => _userService.GetPassengerBookings(userId));
+
+        // Act & Assert
+        var act = async () => await UserService.GetPassengerBookings(userId);
+        await act.Should().ThrowAsync<NoBookingFoundException>()
+            .WithMessage($"No bookings found for passenger {userId}");
+    }
+
+    [Fact]
+    public async Task GetAllUsers_ShouldReturnAllUsers()
+    {
+        // Act
+        var users = await UserService.GetAllUsers();
+        
+        // Assert
+        users.Should().NotBeNull();
+        users.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public async Task SaveUser_ShouldSaveUser()
+    {
+        // Arrange
+        var user = _fixture.Create<User>();
+        
+        // Act
+        await UserService.SaveUser(user);
+        // Assert
+        var users = await UserService.GetAllUsers();
+        users.Should().NotBeNull();
+        users.Should().HaveCount(3);
     }
 }

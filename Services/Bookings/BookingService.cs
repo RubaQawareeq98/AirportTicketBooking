@@ -1,6 +1,6 @@
-using Data;
 using Data.Bookings;
 using Data.Flights;
+using Data.Users;
 using Model.Bookings;
 using Model.Users.Exceptions;
 using Services.Bookings.Exceptions;

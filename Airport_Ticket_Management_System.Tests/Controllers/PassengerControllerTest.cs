@@ -2,7 +2,6 @@ using AutoFixture;
 using AutoFixture.AutoMoq;
 using Controllers;
 using FluentAssertions;
-using Model;
 using Model.Bookings;
 using Model.Flights;
 using Model.Users;

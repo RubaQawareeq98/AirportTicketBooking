@@ -1,8 +1,9 @@
-using Model;
 using Model.Bookings;
+using Model.Flights;
+
 namespace Airport_Ticket_Management_System.Tests.Data.MockingData;
 
-public class MockBookings
+public abstract class MockBookings
 {
     public static List<BookingDetails> GetMockBookings()
     {

@@ -2,7 +2,7 @@ using Model.Users;
 
 namespace Airport_Ticket_Management_System.Tests.Data.MockingData;
 
-public class MockUsers
+public abstract class MockUsers
 {
     public static List<User> GetMockUsers()
     {
@@ -10,7 +10,7 @@ public class MockUsers
        [
            new User
            {
-               Id = Guid.NewGuid(),
+               Id = new Guid("3da9efb3-185c-4233-bf4e-bbc0ece85484"),
                UserName = "ruba",
                Password = "123456",
                FullName = "Ruba",

@@ -1,8 +1,8 @@
 using Airport_Ticket_Management_System.Tests.Data.MockingData;
 using AutoFixture;
 using FluentAssertions;
-using Model;
 using Model.Bookings;
+using Model.Flights;
 using Model.Users.Exceptions;
 using Services.Bookings.Exceptions;
 

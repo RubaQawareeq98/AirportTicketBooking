@@ -4,9 +4,10 @@ using AutoFixture.AutoMoq;
 using Data;
 using Data.Bookings;
 using Data.Exceptions;
+using Data.Files;
 using FluentAssertions;
-using Model;
 using Model.Bookings;
+using Model.Flights;
 using Model.Users.Exceptions;
 using Moq;
 

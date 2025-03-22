@@ -29,20 +29,14 @@ public class FileFixture : IDisposable
         File.WriteAllText(FilePath.Flights, flightsJson);
         File.WriteAllText(FilePath.Bookings, bookingsJson);
         File.WriteAllText(FilePath.Users, usersJson);
-
-        // Ensure files are correctly written
-        if (!File.Exists(FilePath.Bookings) || new FileInfo(FilePath.Bookings).Length == 0)
-        {
-            throw new Exception("Bookings file was not properly written.");
-        }
     }
 
 
     public void Dispose()
     {
-        if (File.Exists(FilePath.Flights))
-        {
-            File.Delete(FilePath.Flights);
-        }
+        if (!File.Exists(FilePath.Flights) || !File.Exists(FilePath.Bookings) || !File.Exists(FilePath.Users)) return;
+        File.Delete(FilePath.Flights);
+        File.Delete(FilePath.Bookings);
+        File.Delete(FilePath.Users);
     }
 }
