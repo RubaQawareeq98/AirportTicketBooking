@@ -48,7 +48,6 @@ public class FlightRepository(IFilePathSettings settings, FlightValidator valida
         {
             Console.WriteLine(ex.Message);
         }
-       
     }
 
     public async Task UpdateFlight(Flight modifiedFlight)

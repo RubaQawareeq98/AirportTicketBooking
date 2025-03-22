@@ -1,6 +1,6 @@
-namespace Data;
+namespace Data.Exceptions;
 
 public class InvalidDateFormatException : Exception 
 {
-    public override string Message { get; } = "Invalid date format, Expected format YYYY-MM-DD. ";
+    public override string Message => "Invalid date format, Expected format YYYY-MM-DD. ";
 }

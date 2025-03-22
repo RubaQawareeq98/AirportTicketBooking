@@ -9,6 +9,8 @@ public class UserRepository(IFilePathSettings settings, IFileRepository<User> fi
     {
         try
         {
+            Console.WriteLine("Getting all users");
+            Console.WriteLine(settings.Users, "  ", settings.Flights);
             var users = await fileRepository.ReadDataFromFile(settings.Users);
             return users;
         }

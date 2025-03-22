@@ -1,6 +1,7 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
 using Controllers;
+using FluentAssertions;
 using Model;
 using Model.Bookings;
 using Model.Flights;
@@ -40,11 +41,14 @@ namespace Airport_Ticket_Management_System.Tests.Controllers;
         [Fact]
         public async Task ShowPassengerPage_ShouldExitOnExitOption()
         {
+            // Arrange
             _passengerViewMock.SetupSequence(v => v.ShowPassengerMainMenu())
                 .Returns(PassengerOptions.Exit);
-
+            
+            // Act
             await _controller.ShowPassengerPage();
 
+            // Assert
             _passengerViewMock.Verify(v => v.ShowPassengerMainMenu(), Times.Once);
         }
 
@@ -66,7 +70,7 @@ namespace Airport_Ticket_Management_System.Tests.Controllers;
         }
         
         [Fact]
-        public async Task HandleViewFlights_ShouldHandleException_Gracefully()
+        public async Task HandleViewFlights_ShouldHandleException_WhenNoFlightsExist()
         {
             // Arrange
             _flightServiceMock.Setup(s => s.GetAllFlights()).ThrowsAsync(new FlightNotFoundException("!!! No flight was found !!!"));
@@ -78,16 +82,17 @@ namespace Airport_Ticket_Management_System.Tests.Controllers;
             var exception = await Record.ExceptionAsync(() => _controller.ShowPassengerPage());
 
             // Assert
-            Assert.Null(exception);
+            exception.Should().BeNull();
             _flightServiceMock.Verify(s => s.GetAllFlights(), Times.Once);
         }
         
         [Fact]
-        public async Task HandleViewBookings_ShouldCallShowBookings_WhenBookingsExist()
+        public async Task HandleViewBookings_ShouldCallShowBookings()
         {
             // Arrange
             var bookings = _fixture.Create<List<Booking>>();
             var user = _fixture.Create<User>();
+            
             _userServiceMock.Setup(s => s.GetPassengerBookings(user.Id)).ReturnsAsync(bookings);
             _currentUserMock.Setup(c => c.User).Returns(user);
             _passengerViewMock.SetupSequence(v => v.ShowPassengerMainMenu())
@@ -101,13 +106,13 @@ namespace Airport_Ticket_Management_System.Tests.Controllers;
             _passengerViewMock.Verify(v => v.ShowBookings(bookings), Times.Once);
         }
 
-
         [Fact]
-        public async Task HandleViewBookings_ShouldHandleException_Gracefully()
+        public async Task HandleViewBookings_ShouldHandleException_WhenNoBookingsExist()
         {
             // Arrange
             var user = _fixture.Create<User>();
-          _userServiceMock.Setup(s => s.GetPassengerBookings(user.Id)).ThrowsAsync(new NoBookingFoundException($"No bookings found for passenger {user.Id}"));
+            
+            _userServiceMock.Setup(s => s.GetPassengerBookings(user.Id)).ThrowsAsync(new NoBookingFoundException($"No bookings found for passenger {user.Id}"));
             _currentUserMock.Setup(c => c.User).Returns(user);
             _passengerViewMock.SetupSequence(v => v.ShowPassengerMainMenu())
                 .Returns(PassengerOptions.ViewBookings)
@@ -117,16 +122,18 @@ namespace Airport_Ticket_Management_System.Tests.Controllers;
             var exception = await Record.ExceptionAsync(() => _controller.ShowPassengerPage());
             
             // Assert
-            Assert.Null(exception); 
+            exception.Should().BeNull();
             _userServiceMock.Verify(s => s.GetPassengerBookings(user.Id), Times.Once);
         }
 
         [Fact]
         public async Task HandleAddBooking_ShouldCallAddBooking()
         {
+            // Arrange
             var flight = _fixture.Create<Flight>();
             var flightClass = _fixture.Create<FlightClass>();
             var user = _fixture.Create<User>();
+            
             _passengerViewMock.Setup(v => v.ReadFlightId()).Returns(flight.Id);
             _passengerViewMock.Setup(v => v.ReadFlightClass()).Returns(flightClass);
             _flightServiceMock.Setup(s => s.GetFlightById(flight.Id)).ReturnsAsync(flight);
@@ -136,26 +143,32 @@ namespace Airport_Ticket_Management_System.Tests.Controllers;
            
             _currentUserMock.Setup(c => c.User).Returns(user);
         
+            // Act
             await _controller.ShowPassengerPage();
         
+            // Assert
             _bookingServiceMock.Verify(s => s.AddBooking(It.IsAny<Booking>()), Times.Once);
         }
         
         [Fact]
         public async Task HandleAddBooking_ShouldNotCallAddBooking()
         {
+            // Arrange
             _passengerViewMock.SetupSequence(v => v.ShowPassengerMainMenu())
                 .Returns(PassengerOptions.AddBooking)
                 .Returns(PassengerOptions.Exit);
            
+            // Act
             await _controller.ShowPassengerPage();
         
+            // Assert
             _bookingServiceMock.Verify(s => s.AddBooking(It.IsAny<Booking>()), Times.Never);
         }
         
         [Fact]
         public async Task HandleCancelBooking_ShouldDeleteBooking()
         {
+            // Arrange
             var user = _fixture.Create<User>();
             var booking = _fixture.Create<Booking>();
             booking.PassengerId = user.Id;
@@ -167,14 +180,17 @@ namespace Airport_Ticket_Management_System.Tests.Controllers;
                 .Returns(PassengerOptions.CancelBooking)
                 .Returns(PassengerOptions.Exit);
         
+            // Act
             await _controller.ShowPassengerPage();
         
+            // Assert
             _bookingServiceMock.Verify(s => s.DeleteBooking(booking.Id), Times.Once);
         }
         
         [Fact]
         public async Task HandleCancelBooking_ShouldThrowException_WhenBookingNotFound()
         {
+            // Arrange
             var user = _fixture.Create<User>();
             var booking = _fixture.Create<Booking>();
 
@@ -185,8 +201,10 @@ namespace Airport_Ticket_Management_System.Tests.Controllers;
                 .Returns(PassengerOptions.CancelBooking)
                 .Returns(PassengerOptions.Exit);
         
+            // Act
             await _controller.ShowPassengerPage();
         
+            // Assert
             _bookingServiceMock.Verify(s => s.DeleteBooking(booking.Id), Times.Never);
         }
         
@@ -208,6 +226,7 @@ namespace Airport_Ticket_Management_System.Tests.Controllers;
             _bookingServiceMock.Setup(s => s.GetBookingById(booking.Id)).ReturnsAsync(booking);
             _flightServiceMock.Setup(f => f.GetFlightById(booking.FlightId)).ReturnsAsync(flight);
             _currentUserMock.Setup(c => c.User).Returns(user);
+            
             _passengerViewMock.SetupSequence(v => v.ShowPassengerMainMenu())
                 .Returns(PassengerOptions.ModifyBooking)
                 .Returns(PassengerOptions.Exit);
@@ -219,7 +238,6 @@ namespace Airport_Ticket_Management_System.Tests.Controllers;
             _bookingServiceMock.Verify(s => s.UpdateBooking(It.Is<Booking>(
                 b => b.FlightClass == newFlightClass
             )), Times.Once);
-            
         }
 
         [Fact]
@@ -236,7 +254,7 @@ namespace Airport_Ticket_Management_System.Tests.Controllers;
                 .Returns(PassengerOptions.Exit);
         
             // Act && Assert
-            await Assert.ThrowsAsync<NoBookingFoundException>(() => _controller.ShowPassengerPage());
+            await _controller.Invoking(c => c.ShowPassengerPage()).Should().ThrowAsync<NoBookingFoundException>();
         }
         
         [Fact]
@@ -264,7 +282,7 @@ namespace Airport_Ticket_Management_System.Tests.Controllers;
         }
         
         [Fact]
-        public async Task HandleFilterFlights_ShouldCatchException_WhenServiceFails()
+        public async Task HandleFilterFlights_ShouldCatchException_WhenNoFlightsFound()
         {
             // Arrange
             var filterOption = _fixture.Create<FlightFilterOptions>();
@@ -284,7 +302,5 @@ namespace Airport_Ticket_Management_System.Tests.Controllers;
             // Assert
             _passengerViewMock.Verify(v => v.ShowFlights(It.IsAny<List<Flight>>()), Times.Never);
         }
-        
     }
-    
     

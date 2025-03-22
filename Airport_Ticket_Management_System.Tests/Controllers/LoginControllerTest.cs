@@ -1,6 +1,7 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
 using Controllers;
+using FluentAssertions;
 using Model.Users;
 using Moq;
 using Services.Users;
@@ -21,11 +22,11 @@ public class LoginControllerTest
         _fixture = new Fixture().Customize(new AutoMoqCustomization());
         _loginViewMock = _fixture.Freeze<Mock<ILoginView>>();
         _userServiceMock = _fixture.Freeze<Mock<IUserService>>();
-        _controller = _fixture.Freeze<LoginController>();
+        _controller = _fixture.Create<LoginController>();
     }
 
     [Fact]
-    public async Task Login_ShouldReturnUser_WhenCredentialsAreValid()
+    public async Task Login_ShouldReturnValidUser()
     {
         // Arrange
         var expectedUser = _fixture.Create<User>();
@@ -38,9 +39,9 @@ public class LoginControllerTest
         var result = await _controller.Login();
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(expectedUser.UserName, result.UserName);
-        
+        result.Should().NotBeNull();
+        result.UserName.Should().Be(expectedUser.UserName);
+       
         _loginViewMock.Verify(v => v.WelcomeMessage(), Times.Once);
         _loginViewMock.Verify(v => v.ReadUserName(), Times.Once);
         _loginViewMock.Verify(v => v.ReadPassword(), Times.Once);

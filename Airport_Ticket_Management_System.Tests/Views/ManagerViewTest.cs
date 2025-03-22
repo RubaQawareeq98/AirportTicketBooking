@@ -1,5 +1,6 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
+using FluentAssertions;
 using Model.Bookings;
 using Model.Flights;
 using Views.Consoles;
@@ -13,7 +14,7 @@ public class ManagerViewTest
 {
     private readonly IFixture _fixture;
     private readonly Mock<IConsoleService> _consoleServiceMock;
-    private readonly IManagerView _view;
+    private readonly ManagerView _view;
 
     public ManagerViewTest()
     {
@@ -23,7 +24,7 @@ public class ManagerViewTest
     }
 
     [Fact]
-    public void ShowManagerMenu_ShouldWriteExpectedLines()
+    public void ShowManagerMenu_ShouldWriteExpectedMenuItems()
     {
         // Act
         _view.ShowManagerMenu();
@@ -39,7 +40,7 @@ public class ManagerViewTest
     [InlineData("4", ManagerOptions.FilterBookings)]
     [InlineData("5", ManagerOptions.ImportFlights)]
     [InlineData("6", ManagerOptions.Exit)]
-    public void ReadManagerOptions_ValidInput_ReturnsExpectedEnum(string input, ManagerOptions expected)
+    public void ReadManagerOptions_ShouldReturnValidOption(string input, ManagerOptions expected)
     {
         // Arrange
         _consoleServiceMock.Setup(cs => cs.ReadLine()).Returns(input);
@@ -48,24 +49,24 @@ public class ManagerViewTest
         var result = _view.ReadManagerOptions();
 
         // Assert
-        Assert.Equal(expected, result);
+        expected.Should().Be(result);
     }
 
     [Theory]
     [InlineData("0")]
     [InlineData("7")]
     [InlineData("abc")]
-    public void ReadManagerOptions_InvalidInput_ThrowsException(string input)
+    public void ReadManagerOptions_ShouldThrowsException_WhenInvalidInput(string input)
     {
         // Arrange
         _consoleServiceMock.Setup(cs => cs.ReadLine()).Returns(input);
 
         // Act & Assert
-        Assert.Throws<InvalidOptionException>(() => _view.ReadManagerOptions());
+        _view.Invoking(_ => _view.ReadManagerOptions()).Should().Throw<InvalidOptionException>();
     }
 
     [Fact]
-    public void ReadCsvPath_ValidPath_ReturnsPath()
+    public void ReadCsvPath_ShouldReturnValidCsvPath()
     {
         // Arrange
         var expectedPath = _fixture.Create<string>();
@@ -75,21 +76,21 @@ public class ManagerViewTest
         var result = _view.ReadCsvPath();
 
         // Assert
-        Assert.Equal(expectedPath, result);
+        expectedPath.Should().Be(result);
     }
 
     [Fact]
-    public void ReadCsvPath_EmptyPath_ThrowsException()
+    public void ReadCsvPath_ShouldThrowsException_WhenInvalidInput()
     {
         // Arrange
         _consoleServiceMock.Setup(cs => cs.ReadLine()).Returns(string.Empty);
 
         // Act & Assert
-        Assert.Throws<InvalidDataException>(() => _view.ReadCsvPath());
+        _view.Invoking(_ => _view.ReadCsvPath()).Should().Throw<InvalidDataException>();
     }
 
     [Fact]
-    public void ShowFilterOptions_ShouldWriteExpectedLines()
+    public void ShowFilterOptions_ShouldWriteExpectedOptions()
     {
         // Act
         _view.ShowFilterOptions();
@@ -102,7 +103,7 @@ public class ManagerViewTest
     [InlineData("1", BookingFilterOptions.Id)]
     [InlineData("5", BookingFilterOptions.BookingDate)]
     [InlineData("11", BookingFilterOptions.PassengerName)]
-    public void ReadFilterOption_ValidInput_ReturnsExpectedEnum(string input, BookingFilterOptions expected)
+    public void ReadFilterOption_ShouldReadValidOption(string input, BookingFilterOptions expected)
     {
         // Arrange
         _consoleServiceMock.Setup(cs => cs.ReadLine()).Returns(input);
@@ -111,20 +112,20 @@ public class ManagerViewTest
         var result = _view.ReadFilterOption();
 
         // Assert
-        Assert.Equal(expected, result);
+        expected.Should().Be(result);
     }
 
     [Theory]
     [InlineData("0")]
     [InlineData("12")]
-    [InlineData("xyz")]
-    public void ReadFilterOption_InvalidInput_ThrowsException(string input)
+    [InlineData("abc")]
+    public void ReadFilterOption_ShouldThrowsException_WhenInvalidInput(string input)
     {
         // Arrange
         _consoleServiceMock.Setup(cs => cs.ReadLine()).Returns(input);
 
         // Act & Assert
-        Assert.Throws<InvalidOptionException>(() => _view.ReadFilterOption());
+        _view.Invoking(v => v.ReadFilterOption()).Should().Throw<InvalidOptionException>();
     }
 
     [Fact]
@@ -142,13 +143,13 @@ public class ManagerViewTest
     }
 
     [Fact]
-    public void ReadFilterValue_EmptyValue_ThrowsException()
+    public void ReadFilterValue_ShouldThrowsException_WhenInvalidInput()
     {
         // Arrange
         _consoleServiceMock.Setup(cs => cs.ReadLine()).Returns(string.Empty);
 
         // Act & Assert
-        Assert.Throws<InvalidDataException>(() => _view.ReadFilterValue());
+        _view.Invoking(v => v.ReadFilterValue()).Should().Throw<InvalidDataException>();
     }
 
     [Fact]

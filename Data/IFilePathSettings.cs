@@ -2,7 +2,7 @@ namespace Data;
 
 public interface IFilePathSettings
 {
-    string Flights { get; }
-    string Bookings { get; }
-    string Users { get; }
+    string Flights { get; set; }
+    string Bookings { get; set; }
+    string Users { get; set; }
 }

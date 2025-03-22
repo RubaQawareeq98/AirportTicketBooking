@@ -1,5 +1,6 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
+using FluentAssertions;
 using Moq;
 using Views;
 using Views.Consoles;
@@ -16,19 +17,21 @@ public class LoginViewTest
     {
         _fixture = new Fixture().Customize(new AutoMoqCustomization());
         _consoleServiceMock = _fixture.Freeze<Mock<IConsoleService>>();
-        _view = new LoginView(_consoleServiceMock.Object); 
+        _view = _fixture.Create<LoginView>(); 
     }
 
     [Fact]
     public void WelcomeMessage_ShouldDisplayMessage()
     {
+        // Arrange
+        const string expectedMessage = "Welcome to Airport_Ticket_Booking_System";
         // Act
         _view.WelcomeMessage();
         
         // Assert
-        _consoleServiceMock.Verify(cs => cs.WriteLine("Welcome to Airport_Ticket_Booking_System"), Times.Once);
+        _consoleServiceMock.Verify(cs => cs.WriteLine(expectedMessage), Times.Once);
     }
-
+    
     [Fact]
     public void ReadUsername_ShouldReturnUsername()
     {
@@ -40,7 +43,7 @@ public class LoginViewTest
         var userName = _view.ReadUserName();
         
         // Assert
-        Assert.Equal(userNameInput, userName);
+        userNameInput.Should().BeEquivalentTo(userName);
     }
     
     [Fact]
@@ -60,7 +63,7 @@ public class LoginViewTest
         var userName = _view.ReadUserName();
         
         // Assert
-        Assert.Equal(userNameInput2, userName);
+        userNameInput2.Should().BeEquivalentTo(userName);
         _consoleServiceMock.Verify(cs => cs.WriteLine(expectedMessage), Times.Once);
     }
 
@@ -75,7 +78,7 @@ public class LoginViewTest
         var password = _view.ReadPassword();
         
         // Assert
-        Assert.Equal(passwordInput, password);
+        passwordInput.Should().BeEquivalentTo(password);
     }
 
     [Fact]
@@ -95,7 +98,7 @@ public class LoginViewTest
         var password = _view.ReadPassword();
         
         // Assert
-        Assert.Equal(passwordInput2, password);
+        passwordInput2.Should().BeEquivalentTo(password);
         _consoleServiceMock.Verify(cs => cs.WriteLine(expectedMessage), Times.Once);
     }
 }

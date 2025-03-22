@@ -1,13 +1,16 @@
+using Airport_Ticket_Management_System.Tests.Data.MockingData;
 using AutoFixture;
+using AutoFixture.AutoMoq;
 using Data;
 using Data.Bookings;
+using Data.Exceptions;
 using FluentAssertions;
 using Model;
 using Model.Bookings;
 using Model.Users.Exceptions;
 using Moq;
 
-namespace Airport_Ticket_Management_System.Tests;
+namespace Airport_Ticket_Management_System.Tests.Data;
 
 public class BookingRepositoryTest
 {
@@ -17,17 +20,16 @@ public class BookingRepositoryTest
 
     public BookingRepositoryTest()
     {
-        _mockFileRepository = new Mock<IFileRepository<Booking>>();
-        var mockFilePathSettings = new Mock<IFilePathSettings>();
-        _fixture = new Fixture();
+        _fixture = new Fixture().Customize(new AutoMoqCustomization());
+        _mockFileRepository = _fixture.Freeze<Mock<IFileRepository<Booking>>>();
+        var mockFilePathSettings = _fixture.Freeze<Mock<IFilePathSettings>>();
+
 
         mockFilePathSettings.Setup(s => s.Bookings).Returns("./bookings.json");
 
-        _bookingRepository = new BookingRepository(
-            mockFilePathSettings.Object,
-            _mockFileRepository.Object);
+        _bookingRepository = _fixture.Create<BookingRepository>();
     }
-    
+
     [Fact]
     public async Task SaveBookings_ShouldSaveAllBookings()
     {
@@ -50,6 +52,18 @@ public class BookingRepositoryTest
     }
     
     [Fact]
+    public async Task SaveBookings_ShouldThrowExceptionIfFileDoesNotExist()
+    {
+        // Arrange
+        var bookings = _fixture.CreateMany<Booking>(3).ToList(); 
+        _mockFileRepository.Setup(repo => repo.WriteDataToFile(It.IsAny<string>(), bookings))
+            .Throws<FileNotFoundException>();
+
+        // Act && Assert
+        await Assert.ThrowsAsync<FileNotFoundException>(() => _bookingRepository.SaveBookings(bookings));
+    }
+    
+    [Fact]
     public async Task GetAllBookings_ShouldReturnAllBookings()
     {
         // Arrange
@@ -64,8 +78,100 @@ public class BookingRepositoryTest
         result.Should().BeEquivalentTo(bookings);
         _mockFileRepository.Verify(fileRepo => fileRepo.ReadDataFromFile(It.IsAny<string>()), Times.Once);
     }
+    
+    [Fact]
+    public async Task GetBookings_ShouldThrowExceptionIfFileDoesNotExist()
+    {
+        // Arrange
+        _mockFileRepository.Setup(repo => repo.ReadDataFromFile(It.IsAny<string>()))
+            .Throws<FileNotFoundException>();
 
-   [Fact]
+        // Act && Assert
+        await Assert.ThrowsAsync<FileNotFoundException>(() => _bookingRepository.GetAllBookings());
+    }
+
+    [Fact]
+    public async Task AddBooking_ShouldAddBooking()
+    {
+        // Arrange
+        var booking = _fixture.Create<Booking>();
+        var bookings = _fixture.CreateMany<Booking>(3).ToList();
+        _mockFileRepository.Setup(repo => repo.ReadDataFromFile(It.IsAny<string>())).ReturnsAsync(bookings);
+        
+        // Act
+        await _bookingRepository.AddBooking(booking);
+        
+        // Assert 
+        _mockFileRepository.Verify(repo => repo.WriteDataToFile(It.IsAny<string>(), It.IsAny<List<Booking>>()), Times.Once());
+    }
+    
+    [Theory]
+    [InlineData(BookingFilterOptions.DepartureCountry, "USA", 1)]
+    [InlineData(BookingFilterOptions.DestinationCountry, "UK", 1)]
+    [InlineData(BookingFilterOptions.PassengerName, "Ruba", 1)]
+    [InlineData(BookingFilterOptions.ClassType, "Business", 1)]
+    [InlineData(BookingFilterOptions.Cancelled, "", 1)] 
+    [InlineData((BookingFilterOptions)99, "random", 0)] 
+   
+    public void GetFilteredBookings_ShouldReturnExpectedBookings(BookingFilterOptions filter, string value, int expectedCount)
+    {
+        // Act
+        var mockBookings = MockBookings.GetMockBookings();
+        var result = _bookingRepository.GetFilteredBookings(mockBookings, filter, value);
+
+        // Assert
+        Assert.Equal(expectedCount, result.Count);
+    }
+
+    [Theory]
+    [InlineData(BookingFilterOptions.Id, "invalid-guid", typeof(InvalidOperationException))]
+    [InlineData(BookingFilterOptions.FlightId, "invalid-guid", typeof(InvalidOperationException))]
+    [InlineData(BookingFilterOptions.BookingDate, "invalid-date", typeof(InvalidDateFormatException))]
+    [InlineData(BookingFilterOptions.DepartureDate, "invalid-date", typeof(InvalidDateFormatException))]
+    [InlineData(BookingFilterOptions.PassengerId, "invalid-guid", typeof(FormatException))]
+    [InlineData(BookingFilterOptions.Price, "invalid-price", typeof(FormatException))]
+    public void GetFilteredBookings_ShouldThrowException_ForInvalidInputs(BookingFilterOptions filter, string value, Type expectedException)
+    {
+        // Act & Assert
+        var mockBookings = MockBookings.GetMockBookings();
+        Assert.Throws(expectedException, () => _bookingRepository.GetFilteredBookings(mockBookings, filter, value));
+    }
+
+    [Fact]
+    public void GetFilteredBookings_ShouldReturnBookingById()
+    {
+        // Arrange
+        var mockBookings = MockBookings.GetMockBookings();
+        var targetBooking = mockBookings[0];
+        const BookingFilterOptions filterOption = BookingFilterOptions.Id;
+        var validId = targetBooking.Id.ToString();
+
+        // Act
+        var result = _bookingRepository.GetFilteredBookings(mockBookings, filterOption, validId);
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal(targetBooking.Id, result[0].Id);
+    }
+
+    [Fact]
+    public void GetFilteredBookings_ShouldReturnBookingByFlightId()
+    {
+        // Arrange
+        var mockBookings = MockBookings.GetMockBookings();
+        var targetFlight = mockBookings[0].Flight;
+        const BookingFilterOptions filterOption = BookingFilterOptions.FlightId;
+        var validFlightId = targetFlight.Id.ToString();
+
+        // Act
+        var result = _bookingRepository.GetFilteredBookings(mockBookings, filterOption, validFlightId);
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal(targetFlight.Id, result[0].Flight.Id);
+    }
+    
+    [Fact]
     public async Task UpdateBookings_ShouldUpdateBookings()
     {
         var bookings = _fixture.CreateMany<Booking>(3).ToList();
@@ -88,7 +194,7 @@ public class BookingRepositoryTest
         )), Times.Once); 
     }
     
-    [Fact]
+     [Fact]
     public async Task UpdateBookings_ShouldNotUpdateBookings()
     {
         var bookings = _fixture.CreateMany<Booking>(3).ToList();
@@ -111,7 +217,7 @@ public class BookingRepositoryTest
         )), Times.Never); 
     }
 
-    [Fact]
+     [Fact]
     public async Task CancelBooking_ShouldCancelBooking()
     {
         var bookings = _fixture.Build<Booking>()
@@ -135,7 +241,7 @@ public class BookingRepositoryTest
 
     }
     
-    [Fact]
+     [Fact]
     public async Task CancelBooking_ShouldNotCancelBooking()
     {
         var bookings = _fixture.Build<Booking>()

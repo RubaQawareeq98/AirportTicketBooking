@@ -1,3 +1,4 @@
+using Data.Exceptions;
 using Model.Bookings;
 using Model.Users.Exceptions;
 
@@ -105,7 +106,7 @@ public class BookingRepository(IFilePathSettings settings, IFileRepository<Booki
                 return bookingDetails.Where(item => item.PassengerId == Guid.Parse(value)).Select(item => item).ToList();
             
             case BookingFilterOptions.ClassType:
-                return bookingDetails.Where(item => nameof(item.FlightClass) == value).Select(item => item).ToList();
+                return bookingDetails.Where(item => item.FlightClass.ToString() == value).Select(item => item).ToList();
             
             case BookingFilterOptions.Price:
                 return bookingDetails.Where(item => Math.Abs(item.Price - double.Parse(value)) < 0).Select(item => item).ToList();

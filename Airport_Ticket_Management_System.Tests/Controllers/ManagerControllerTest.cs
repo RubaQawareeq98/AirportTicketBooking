@@ -1,6 +1,7 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
 using Controllers;
+using FluentAssertions;
 using Model.Bookings;
 using Model.Flights;
 using Model.Users.Exceptions;
@@ -27,7 +28,7 @@ public class ManagerControllerTest
         _managerViewMock = _fixture.Freeze<Mock<IManagerView>>();
         _flightServiceMock = _fixture.Freeze<Mock<IFlightService>>();
         _bookingServiceMock = _fixture.Freeze<Mock<IBookingService>>();
-        _controller = _fixture.Freeze<ManagerController>();
+        _controller = _fixture.Create<ManagerController>();
     }
 
     [Fact]
@@ -78,10 +79,10 @@ public class ManagerControllerTest
             .Returns(ManagerOptions.Exit);
 
         // Act
-        var exception = await Record.ExceptionAsync(() => _controller.ManagePage());
+       var exception = await Record.ExceptionAsync(() => _controller.ManagePage());
 
         // Assert
-        Assert.Null(exception);
+        exception.Should().BeNull();
         _bookingServiceMock.Verify(s => s.GetAllBookings(), Times.Once);
     }
     
@@ -98,7 +99,7 @@ public class ManagerControllerTest
         var exception = await Record.ExceptionAsync(() => _controller.ManagePage());
 
         // Assert
-        Assert.Null(exception);
+        exception.Should().BeNull();
         _flightServiceMock.Verify(s => s.GetAllFlights(), Times.Once);
     }
     
@@ -132,13 +133,13 @@ public class ManagerControllerTest
     {
         // Arrange
         var importResults = _fixture.Create<List<string>>();
-        const string csvPath = "./flights.csv";
+        var csvPath = _fixture.Create<string>();
 
         _managerViewMock.SetupSequence(v => v.ReadManagerOptions())
             .Returns(ManagerOptions.ImportFlights)
             .Returns(ManagerOptions.Exit);
+        
         _managerViewMock.Setup(v => v.ReadCsvPath()).Returns(csvPath);
-            
         _flightServiceMock.Setup(s => s.ImportFlight(csvPath)).ReturnsAsync(importResults);
 
         // Act

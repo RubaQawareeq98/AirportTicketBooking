@@ -7,7 +7,7 @@ using Model.Users.Exceptions;
 using Moq;
 using Services.Users;
 
-namespace Airport_Ticket_Management_System.Tests;
+namespace Airport_Ticket_Management_System.Tests.Services;
 
 public class UserServicesTest
 {
@@ -70,5 +70,4 @@ public class UserServicesTest
         var userId = _fixture.Create<Guid>();
         await Assert.ThrowsAsync<NoBookingFoundException>(() => _userService.GetPassengerBookings(userId));
     }
-    
 }
