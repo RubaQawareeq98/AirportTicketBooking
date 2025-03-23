@@ -30,11 +30,12 @@ public class UserServicesTest : TestBase
         // Arrange
         var userName = _fixture.Create<string>();
         var password = _fixture.Create<string>();
+        const string expectedMessage = "Invalid username or password";
 
         // Act & Assert
         var act = async () => await UserService.ValidateUser(userName, password);
         await act.Should().ThrowAsync<UserNotFoundException>()
-            .WithMessage("Invalid username or password");
+            .WithMessage(expectedMessage);
     }
 
     [Fact]
@@ -56,11 +57,12 @@ public class UserServicesTest : TestBase
     {
         // Arrange
         var userId = _fixture.Create<Guid>();
+        var expectedMessage = $"No bookings found for passenger {userId}";
 
         // Act & Assert
         var act = async () => await UserService.GetPassengerBookings(userId);
         await act.Should().ThrowAsync<NoBookingFoundException>()
-            .WithMessage($"No bookings found for passenger {userId}");
+            .WithMessage(expectedMessage);
     }
 
     [Fact]

@@ -2,6 +2,7 @@ using Data.Exceptions;
 using Model.Bookings;
 using Model.Flights;
 using Services.Bookings.Exceptions;
+using Services.Flights.Exceptions;
 using Views.Consoles;
 
 namespace Views.Passengers;
@@ -90,7 +91,7 @@ public class PassengerView (IConsoleService consoleService): IPassengerView
     public Guid ReadFlightId()
     {
         consoleService.WriteLine("Enter The flight ID you want to book");
-        return Guid.TryParse(consoleService.ReadLine(), out var flightId)? flightId : throw new BookingNotFoundException("Invalid booking id");
+        return Guid.TryParse(consoleService.ReadLine(), out var flightId)? flightId : throw new FlightNotFoundException("Invalid flight id");
 
     }
 

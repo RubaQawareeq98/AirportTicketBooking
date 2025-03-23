@@ -20,8 +20,7 @@ public class ManagerControllerTest
     private readonly Mock<IManagerView> _managerViewMock;
     private readonly Mock<IFlightService> _flightServiceMock;
     private readonly Mock<IBookingService> _bookingServiceMock;
-
-
+    
     public ManagerControllerTest()
     {
         _fixture = new Fixture().Customize(new AutoMoqCustomization());

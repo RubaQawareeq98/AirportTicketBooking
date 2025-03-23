@@ -18,7 +18,7 @@ public class TestBase : IDisposable
     
     protected readonly IBookingService BookingService;
     protected readonly IBookingRepository BookingRepository;
-    private readonly IUserRepository UserRepository;
+    protected readonly IUserRepository UserRepository;
     protected readonly IUserService UserService;
     private readonly FileFixture _fileFixture;
 

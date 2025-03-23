@@ -103,12 +103,13 @@ public class FlightRepositoryTest : TestBase
     {
         // Arrange
         var filePath = _fixture.Create<string>();
+        const string expectedErrorMessage = "File does not exist";
 
         // Act
         var result = await FlightRepository.ImportFlights(filePath);
 
         // Assert
         result.Should().ContainSingle()
-            .Which.Should().Contain("File does not exist");
+            .Which.Should().Contain(expectedErrorMessage);
     }
 }

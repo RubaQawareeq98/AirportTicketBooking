@@ -112,7 +112,7 @@ public class BookingRepositoryTest
     [InlineData(BookingFilterOptions.PassengerName, "Ruba", 1)]
     [InlineData(BookingFilterOptions.ClassType, "Business", 1)]
     [InlineData(BookingFilterOptions.Cancelled, "", 1)] 
-    [InlineData((BookingFilterOptions)99, "random", 0)] 
+    [InlineData((BookingFilterOptions)99, "any", 0)] 
    
     public void GetFilteredBookings_ShouldReturnExpectedBookings(BookingFilterOptions filter, string value, int expectedCount)
     {
@@ -125,12 +125,12 @@ public class BookingRepositoryTest
     }
 
     [Theory]
-    [InlineData(BookingFilterOptions.Id, "invalid-guid", typeof(InvalidOperationException))]
-    [InlineData(BookingFilterOptions.FlightId, "invalid-guid", typeof(InvalidOperationException))]
-    [InlineData(BookingFilterOptions.BookingDate, "invalid-date", typeof(InvalidDateFormatException))]
-    [InlineData(BookingFilterOptions.DepartureDate, "invalid-date", typeof(InvalidDateFormatException))]
-    [InlineData(BookingFilterOptions.PassengerId, "invalid-guid", typeof(FormatException))]
-    [InlineData(BookingFilterOptions.Price, "invalid-price", typeof(FormatException))]
+    [InlineData(BookingFilterOptions.Id, "invalidGuid", typeof(InvalidOperationException))]
+    [InlineData(BookingFilterOptions.FlightId, "invalidGuid", typeof(InvalidOperationException))]
+    [InlineData(BookingFilterOptions.BookingDate, "invalidDate", typeof(InvalidDateFormatException))]
+    [InlineData(BookingFilterOptions.DepartureDate, "invalidDate", typeof(InvalidDateFormatException))]
+    [InlineData(BookingFilterOptions.PassengerId, "invalidGuid", typeof(FormatException))]
+    [InlineData(BookingFilterOptions.Price, "invalidPrice", typeof(FormatException))]
     public void GetFilteredBookings_ShouldThrowException_ForInvalidInputs(BookingFilterOptions filter, string value, Type expectedException)
     {
         // Act & Assert
@@ -272,5 +272,4 @@ public class BookingRepositoryTest
         var filteredBookings = _bookingRepository.GetFilteredBookings(bookingDetails, BookingFilterOptions.DepartureCountry, filterValue);
         Assert.Single(filteredBookings);
     }
-    
 }

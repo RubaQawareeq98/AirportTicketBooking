@@ -28,11 +28,12 @@ public class BookingServiceTest : TestBase
     {
         // Arrange
         await BookingRepository.SaveBookings([]);
+        const string expectedMessage = "!!! No bookings found !!!";
 
         // Act & Assert
         var act = async () => await BookingService.GetAllBookings();
         await act.Should().ThrowAsync<NoBookingFoundException>()
-            .WithMessage("!!! No bookings found !!!");
+            .WithMessage(expectedMessage);
     }
     
     [Fact]
@@ -54,11 +55,12 @@ public class BookingServiceTest : TestBase
     {
         // Arrange 
         var bookingId = Guid.NewGuid();
+        const string expectedMessage = "Invalid booking Id";
         
         // Act & Assert
         var act = async () => await BookingService.GetBookingById(bookingId);
         await act.Should().ThrowAsync<BookingNotFoundException>()
-            .WithMessage("Invalid booking Id");
+            .WithMessage(expectedMessage);
     }
     
     [Fact]
@@ -67,11 +69,12 @@ public class BookingServiceTest : TestBase
         // Arrange
         const BookingFilterOptions filterOption = BookingFilterOptions.DepartureCountry;
         const string filterValue = "value";
+        const string expectedMessage = "!!! No bookings found !!!";
         
         // Act & Assert
         var act = async () => await BookingService.GetFilteredBooking(filterOption, filterValue);
         await act.Should().ThrowAsync<BookingNotFoundException>()
-            .WithMessage("!!! No bookings found !!!");
+            .WithMessage(expectedMessage);
     }
     
     [Fact]
@@ -94,11 +97,12 @@ public class BookingServiceTest : TestBase
     {
         // Arrange
         var booking = MockBookings.GetMockBookings().Last();
+        const string expectedMessage = "This Booing already exists";
 
         // Act & Assert
         var act = async () => await BookingService.AddBooking(booking);
         await act.Should().ThrowAsync<BookingAlreadyExistException>()
-            .WithMessage("This Booing already exists");
+            .WithMessage(expectedMessage);
     }
     
     [Fact]
@@ -123,11 +127,12 @@ public class BookingServiceTest : TestBase
     {
         // Arrange
         var booking = _fixture.Create<Booking>();
+        const string expectedMessage = "Booking not found";
 
         // Act & Assert
         var act = async () => await BookingService.UpdateBooking(booking);
         await act.Should().ThrowAsync<BookingNotFoundException>()
-            .WithMessage("Booking not found");
+            .WithMessage(expectedMessage);
     } 
     
     [Fact]
@@ -150,10 +155,11 @@ public class BookingServiceTest : TestBase
     {
         // Arrange
         var bookingId = _fixture.Create<Guid>();
+        const string expectedMessage = "Invalid booking Id";
 
         // Act & Assert
         var act = async () => await BookingService.DeleteBooking(bookingId);
         await act.Should().ThrowAsync<BookingNotFoundException>()
-            .WithMessage("Invalid booking Id");
+            .WithMessage(expectedMessage);
     }
 }

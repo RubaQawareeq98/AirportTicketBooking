@@ -52,11 +52,12 @@ public class FlightServicesTest  : TestBase
     {
         // Arrange 
         var flightId = Guid.NewGuid();
+        var expectedMessage = $"Flight with id {flightId} not found";
         
         // Act & Assert
         var act = async () => await FlightService.GetFlightById(flightId);
         await act.Should().ThrowAsync<FlightNotFoundException>()
-            .WithMessage($"Flight with id {flightId} not found");
+            .WithMessage(expectedMessage);
     }
     
     [Fact]
@@ -80,11 +81,12 @@ public class FlightServicesTest  : TestBase
         // Arrange
         const FlightFilterOptions filterOption = FlightFilterOptions.DepartureAirport;
         const string filterValue = "value";
+        const string expectedMessage = "No Match flights found";
         
         // Act & Assert
         var act = async () => await FlightService.GetFilteredFlights(filterOption, filterValue);
         await act.Should().ThrowAsync<FlightNotFoundException>()
-            .WithMessage("No Match flights found");
+            .WithMessage(expectedMessage);
     }
     
     [Fact]
@@ -107,11 +109,12 @@ public class FlightServicesTest  : TestBase
     {
         // Arrange
         var flight = MockFlights.GetFlights().First();
+        const string expectedMessage = "This flight already exists";
 
         // Act & Assert
         var act = async () => await FlightService.AddFlight(flight);
         await act.Should().ThrowAsync<FlightAlreadyExistException>()
-            .WithMessage("This flight already exists");
+            .WithMessage(expectedMessage);
     }
     
     [Fact]
@@ -136,11 +139,12 @@ public class FlightServicesTest  : TestBase
     {
         // Arrange
         var flight = _fixture.Create<Flight>();
+        const string expectedMessage = "Flight not found";
 
         // Act & Assert
         var act = async () => await FlightService.UpdateFlight(flight);
         await act.Should().ThrowAsync<FlightNotFoundException>()
-            .WithMessage("Flight not found");
+            .WithMessage(expectedMessage);
     } 
     
     [Fact]
@@ -164,11 +168,12 @@ public class FlightServicesTest  : TestBase
     {
         // Arrange
         var flightId = _fixture.Create<Guid>();
+        var expectedMessage = $"Flight with id {flightId} not found";
 
         // Act & Assert
         var act = async () => await FlightService.DeleteFlight(flightId);
         await act.Should().ThrowAsync<FlightNotFoundException>()
-            .WithMessage($"Flight with id {flightId} not found");
+            .WithMessage(expectedMessage);
     }
 
     [Fact]
