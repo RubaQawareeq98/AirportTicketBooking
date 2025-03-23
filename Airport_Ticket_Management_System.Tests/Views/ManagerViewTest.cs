@@ -1,11 +1,8 @@
 using AutoFixture;
-using AutoFixture.AutoMoq;
 using FluentAssertions;
 using Model.Bookings;
 using Model.Flights;
-using Views.Consoles;
 using Views.Managers;
-using Moq;
 using Views;
 
 namespace Airport_Ticket_Management_System.Tests.Views;
@@ -13,14 +10,14 @@ namespace Airport_Ticket_Management_System.Tests.Views;
 public class ManagerViewTest
 {
     private readonly IFixture _fixture;
-    private readonly Mock<IConsoleService> _consoleServiceMock;
+    private readonly ConsoleService _consoleService;
     private readonly ManagerView _view;
 
     public ManagerViewTest()
     {
-        _fixture = new Fixture().Customize(new AutoMoqCustomization());
-        _consoleServiceMock = _fixture.Freeze<Mock<IConsoleService>>();
-        _view = _fixture.Create<ManagerView>();
+        _fixture = new Fixture();
+        _consoleService = new ConsoleService();
+        _view = new ManagerView(_consoleService);
     }
 
     [Fact]
@@ -30,7 +27,7 @@ public class ManagerViewTest
         _view.ShowManagerMenu();
 
         // Assert
-        _consoleServiceMock.Verify(cs => cs.WriteLine(It.IsAny<string>()), Times.Exactly(7));
+        _consoleService.GetOutput().Count.Should().Be(7);
     }
 
     [Theory]
@@ -43,23 +40,23 @@ public class ManagerViewTest
     public void ReadManagerOptions_ShouldReturnValidOption(string input, ManagerOptions expected)
     {
         // Arrange
-        _consoleServiceMock.Setup(cs => cs.ReadLine()).Returns(input);
+        _consoleService.SetInput(input);
 
         // Act
         var result = _view.ReadManagerOptions();
 
         // Assert
-        expected.Should().Be(result);
+        result.Should().Be(expected);
     }
 
     [Theory]
     [InlineData("0")]
     [InlineData("7")]
     [InlineData("abc")]
-    public void ReadManagerOptions_ShouldThrowsException_WhenInvalidInput(string input)
+    public void ReadManagerOptions_ShouldThrowException_WhenInvalidInput(string input)
     {
         // Arrange
-        _consoleServiceMock.Setup(cs => cs.ReadLine()).Returns(input);
+        _consoleService.SetInput(input);
 
         // Act & Assert
         _view.Invoking(_ => _view.ReadManagerOptions()).Should().Throw<InvalidOptionException>();
@@ -70,20 +67,20 @@ public class ManagerViewTest
     {
         // Arrange
         var expectedPath = _fixture.Create<string>();
-        _consoleServiceMock.Setup(cs => cs.ReadLine()).Returns(expectedPath);
+        _consoleService.SetInput(expectedPath);
 
         // Act
         var result = _view.ReadCsvPath();
 
         // Assert
-        expectedPath.Should().Be(result);
+        result.Should().Be(expectedPath);
     }
 
     [Fact]
-    public void ReadCsvPath_ShouldThrowsException_WhenInvalidInput()
+    public void ReadCsvPath_ShouldThrowException_WhenInvalidInput()
     {
         // Arrange
-        _consoleServiceMock.Setup(cs => cs.ReadLine()).Returns(string.Empty);
+        _consoleService.SetInput(string.Empty);
 
         // Act & Assert
         _view.Invoking(_ => _view.ReadCsvPath()).Should().Throw<InvalidDataException>();
@@ -96,60 +93,7 @@ public class ManagerViewTest
         _view.ShowFilterOptions();
 
         // Assert
-        _consoleServiceMock.Verify(cs => cs.WriteLine(It.IsAny<string>()), Times.Exactly(12));
-    }
-
-    [Theory]
-    [InlineData("1", BookingFilterOptions.Id)]
-    [InlineData("5", BookingFilterOptions.BookingDate)]
-    [InlineData("11", BookingFilterOptions.PassengerName)]
-    public void ReadFilterOption_ShouldReadValidOption(string input, BookingFilterOptions expected)
-    {
-        // Arrange
-        _consoleServiceMock.Setup(cs => cs.ReadLine()).Returns(input);
-
-        // Act
-        var result = _view.ReadFilterOption();
-
-        // Assert
-        expected.Should().Be(result);
-    }
-
-    [Theory]
-    [InlineData("0")]
-    [InlineData("12")]
-    [InlineData("abc")]
-    public void ReadFilterOption_ShouldThrowsException_WhenInvalidInput(string input)
-    {
-        // Arrange
-        _consoleServiceMock.Setup(cs => cs.ReadLine()).Returns(input);
-
-        // Act & Assert
-        _view.Invoking(v => v.ReadFilterOption()).Should().Throw<InvalidOptionException>();
-    }
-
-    [Fact]
-    public void ReadFilterValue_ValidValue_ReturnsValue()
-    {
-        // Arrange
-        var expectedValue = _fixture.Create<string>();
-        _consoleServiceMock.Setup(cs => cs.ReadLine()).Returns(expectedValue);
-
-        // Act
-        var result = _view.ReadFilterValue();
-
-        // Assert
-        Assert.Equal(expectedValue, result);
-    }
-
-    [Fact]
-    public void ReadFilterValue_ShouldThrowsException_WhenInvalidInput()
-    {
-        // Arrange
-        _consoleServiceMock.Setup(cs => cs.ReadLine()).Returns(string.Empty);
-
-        // Act & Assert
-        _view.Invoking(v => v.ReadFilterValue()).Should().Throw<InvalidDataException>();
+        _consoleService.GetOutput().Count.Should().Be(12);
     }
 
     [Fact]
@@ -162,7 +106,7 @@ public class ManagerViewTest
         _view.ShowFlights(flights);
 
         // Assert
-        _consoleServiceMock.Verify(cs => cs.WriteLine(It.IsAny<string>()), Times.AtLeast(flights.Count + 3));
+        _consoleService.GetOutput().Count.Should().BeGreaterThanOrEqualTo(flights.Count + 3);
     }
 
     [Fact]
@@ -175,7 +119,7 @@ public class ManagerViewTest
         _view.ShowBookings(bookings);
 
         // Assert
-        _consoleServiceMock.Verify(cs => cs.WriteLine(It.IsAny<string>()), Times.AtLeast(bookings.Count + 3));
+        _consoleService.GetOutput().Count.Should().BeGreaterThanOrEqualTo(bookings.Count + 3);
     }
 
     [Fact]
@@ -188,6 +132,59 @@ public class ManagerViewTest
         _view.ShowBookingDetails(bookingDetails);
 
         // Assert
-        _consoleServiceMock.Verify(cs => cs.WriteLine(It.IsAny<string>()), Times.AtLeast(bookingDetails.Count + 2));
+        _consoleService.GetOutput().Count.Should().BeGreaterThanOrEqualTo(bookingDetails.Count + 2);
+    }
+    
+    [Theory]
+    [InlineData("1", BookingFilterOptions.Id)]
+    [InlineData("5", BookingFilterOptions.BookingDate)]
+    [InlineData("11", BookingFilterOptions.PassengerName)]
+    public void ReadFilterOption_ShouldReadValidOption(string input, BookingFilterOptions expected)
+    {
+        // Arrange
+        _consoleService.SetInput(input);
+
+        // Act
+        var result = _view.ReadFilterOption();
+
+        // Assert
+        result.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData("0")]
+    [InlineData("12")]
+    [InlineData("abc")]
+    public void ReadFilterOption_ShouldThrowsException_WhenInvalidInput(string input)
+    {
+        // Arrange
+        _consoleService.SetInput(input);
+
+        // Act & Assert
+        _view.Invoking(v => v.ReadFilterOption()).Should().Throw<InvalidOptionException>();
+    }
+
+    [Fact]
+    public void ReadFilterValue_ValidValue_ReturnsValue()
+    {
+        // Arrange
+        var expectedValue = _fixture.Create<string>();
+        _consoleService.SetInput(expectedValue);
+
+        // Act
+        var result = _view.ReadFilterValue();
+
+        // Assert
+        result.Should().Be(expectedValue);
+    }
+
+    [Fact]
+    public void ReadFilterValue_ShouldThrowsException_WhenInvalidInput()
+    {
+        // Arrange
+        _consoleService.SetInput(string.Empty);
+
+        // Act & Assert
+        _view.Invoking(v => v.ReadFilterValue()).Should().Throw<InvalidDataException>();
     }
 }

@@ -14,7 +14,9 @@ public class ConsoleService : IConsoleService
             _inputQueue.Enqueue(input);
         }
     }
-    
+
+    public List<string> GetOutput() => _outputQueue.ToList();
+
     public string ReadLine() => _inputQueue.Count > 0 ? _inputQueue.Dequeue() : throw new InvalidOperationException("No input provided");
 
     public void WriteLine(string message) => _outputQueue.Enqueue(message);

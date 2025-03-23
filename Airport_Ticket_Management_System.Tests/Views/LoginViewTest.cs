@@ -1,23 +1,20 @@
 using AutoFixture;
-using AutoFixture.AutoMoq;
 using FluentAssertions;
-using Moq;
 using Views;
-using Views.Consoles;
 
 namespace Airport_Ticket_Management_System.Tests.Views;
 
 public class LoginViewTest 
 {
     private readonly IFixture _fixture;
-    private readonly Mock<IConsoleService> _consoleServiceMock;
+    private readonly ConsoleService _consoleService;
     private readonly LoginView _view;
 
     public LoginViewTest()
     {
-        _fixture = new Fixture().Customize(new AutoMoqCustomization());
-        _consoleServiceMock = _fixture.Freeze<Mock<IConsoleService>>();
-        _view = _fixture.Create<LoginView>(); 
+        _fixture = new Fixture();
+        _consoleService = new ConsoleService();
+        _view = new LoginView(_consoleService);
     }
 
     [Fact]
@@ -25,27 +22,28 @@ public class LoginViewTest
     {
         // Arrange
         const string expectedMessage = "Welcome to Airport_Ticket_Booking_System";
+
         // Act
         _view.WelcomeMessage();
-        
+
         // Assert
-        _consoleServiceMock.Verify(cs => cs.WriteLine(expectedMessage), Times.Once);
+        _consoleService.GetOutput().Should().ContainSingle().Which.Should().Be(expectedMessage);
     }
-    
+
     [Fact]
     public void ReadUsername_ShouldReturnUsername()
     {
         // Arrange
         var userNameInput = _fixture.Create<string>();
-        _consoleServiceMock.Setup(cs => cs.ReadLine()).Returns(userNameInput);
-        
+        _consoleService.SetInput(userNameInput);
+
         // Act
         var userName = _view.ReadUserName();
-        
+
         // Assert
-        userNameInput.Should().BeEquivalentTo(userName);
+        userName.Should().Be(userNameInput);
     }
-    
+
     [Fact]
     public void ReadUserName_ShouldPromptAgain_WhenInputIsEmpty()
     {
@@ -54,17 +52,14 @@ public class LoginViewTest
         var userNameInput2 = _fixture.Create<string>();
         const string expectedMessage = "Please enter a valid username";
 
-        _consoleServiceMock
-            .SetupSequence(cs => cs.ReadLine())
-            .Returns(userNameInput1)
-            .Returns(userNameInput2);
-        
+        _consoleService.SetInput(userNameInput1, userNameInput2);
+
         // Act
         var userName = _view.ReadUserName();
-        
+
         // Assert
-        userNameInput2.Should().BeEquivalentTo(userName);
-        _consoleServiceMock.Verify(cs => cs.WriteLine(expectedMessage), Times.Once);
+        userName.Should().Be(userNameInput2);
+        _consoleService.GetOutput().Should().Contain(expectedMessage);
     }
 
     [Fact]
@@ -72,13 +67,13 @@ public class LoginViewTest
     {
         // Arrange
         var passwordInput = _fixture.Create<string>();
-        _consoleServiceMock.Setup(cs => cs.ReadLine()).Returns(passwordInput);
-        
+        _consoleService.SetInput(passwordInput);
+
         // Act
         var password = _view.ReadPassword();
-        
+
         // Assert
-        passwordInput.Should().BeEquivalentTo(password);
+        password.Should().Be(passwordInput);
     }
 
     [Fact]
@@ -89,16 +84,13 @@ public class LoginViewTest
         var passwordInput2 = _fixture.Create<string>();
         const string expectedMessage = "Please enter a valid password";
 
-        _consoleServiceMock
-            .SetupSequence(cs => cs.ReadLine())
-            .Returns(passwordInput1)
-            .Returns(passwordInput2);
-        
+        _consoleService.SetInput(passwordInput1, passwordInput2);
+
         // Act
         var password = _view.ReadPassword();
-        
+
         // Assert
-        passwordInput2.Should().BeEquivalentTo(password);
-        _consoleServiceMock.Verify(cs => cs.WriteLine(expectedMessage), Times.Once);
+        password.Should().Be(passwordInput2);
+        _consoleService.GetOutput().Should().Contain(expectedMessage);
     }
 }
