@@ -15,7 +15,6 @@ public class TestBase : IDisposable
 {
     protected readonly IFlightRepository FlightRepository;
     protected readonly IFlightService FlightService;
-    
     protected readonly IBookingService BookingService;
     protected readonly IBookingRepository BookingRepository;
     protected readonly IUserRepository UserRepository;
@@ -32,6 +31,7 @@ public class TestBase : IDisposable
         UserService = new UserService(UserRepository, BookingRepository);
         BookingService = new BookingService(BookingRepository, FlightRepository, UserRepository);
     }
+
     public void Dispose()
     {
         _fileFixture.Dispose();

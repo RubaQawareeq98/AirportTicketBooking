@@ -1,115 +1,317 @@
-using Airport_Ticket_Management_System.Tests.Data.MockingData;
 using AutoFixture;
+using AutoFixture.AutoMoq;
+using Data;
 using Data.Exceptions;
+using Data.Files;
+using Data.Flights;
 using FluentAssertions;
 using Model.Flights;
+using Moq;
 
 namespace Airport_Ticket_Management_System.Tests.Data;
 
-public class FlightRepositoryTest : TestBase
+public class FlightRepositoryTest
 {
-    private readonly Fixture _fixture = new ();
+    private readonly Mock<IFileRepository<Flight>> _mockFileRepository;
+    private readonly Mock<IFilePathSettings> _mockFilePathSettings;
+    private readonly Mock<FlightValidator> _mockFlightValidator;
+    private readonly IFixture _fixture;
+    private readonly FlightRepository _flightRepository;
+
+    public FlightRepositoryTest()
+    {
+        _fixture = new Fixture().Customize(new AutoMoqCustomization());
+        _mockFileRepository = _fixture.Freeze<Mock<IFileRepository<Flight>>>();
+        _mockFilePathSettings = _fixture.Freeze<Mock<IFilePathSettings>>();
+        _mockFlightValidator = _fixture.Freeze<Mock<FlightValidator>>();
+
+        _mockFilePathSettings.Setup(s => s.Flights).Returns("./flights.json");
+
+        _flightRepository = _fixture.Create<FlightRepository>();
+    }
 
     [Fact]
-    public async Task GetAllFlights_ShouldReturnSavedFlights()
+    public async Task GetAllFlights_ShouldReturnAllFlights()
     {
+        // Arrange
+        var flights = _fixture.CreateMany<Flight>(3).ToList();
+        _mockFileRepository.Setup(repo => repo.ReadDataFromFile(It.IsAny<string>()))
+            .ReturnsAsync(flights);
+
         // Act
-        var result = await FlightRepository.GetAllFlights();
+        var result = await _flightRepository.GetAllFlights();
 
         // Assert
-        result.Should().HaveCount(2);
+        result.Should().BeEquivalentTo(flights);
+    }
+
+    [Fact]
+    public async Task SaveFlights_ShouldCallWriteDataToFile()
+    {
+        // Arrange
+        var flights = _fixture.CreateMany<Flight>(3).ToList();
+
+        // Act
+        await _flightRepository.SaveFlights(flights);
+
+        // Assert
+        _mockFileRepository.Verify(repo => repo.WriteDataToFile(It.IsAny<string>(), flights), Times.Once);
+    }
+
+    [Fact]
+    public async Task AddFlight_ShouldAddFlightToList()
+    {
+        // Arrange
+        var flight = _fixture.Create<Flight>();
+        var flights = new List<Flight>();
+        _mockFileRepository.Setup(repo => repo.ReadDataFromFile(It.IsAny<string>()))
+            .ReturnsAsync(flights);
+
+        // Act
+        await _flightRepository.AddFlight(flight);
+
+        // Assert
+        _mockFileRepository.Verify(repo => repo.WriteDataToFile(It.IsAny<string>(), It.Is<List<Flight>>(f => f.Contains(flight))), Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdateFlight_ShouldUpdateExistingFlight()
+    {
+        // Arrange
+        var flight = _fixture.Create<Flight>();
+        var flights = new List<Flight> { flight };
+        _mockFileRepository.Setup(repo => repo.ReadDataFromFile(It.IsAny<string>()))
+            .ReturnsAsync(flights);
+
+        var modifiedFlight = _fixture.Build<Flight>()
+            .With(f => f.Id, flight.Id)
+            .Create();
+
+        // Act
+        await _flightRepository.UpdateFlight(modifiedFlight);
+
+        // Assert
+        _mockFileRepository.Verify(repo => repo.WriteDataToFile(It.IsAny<string>(), It.Is<List<Flight>>(f => f.Contains(modifiedFlight))), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeleteFlight_ShouldRemoveFlightFromList()
+    {
+        // Arrange
+        var flight = _fixture.Create<Flight>();
+        var flights = new List<Flight> { flight };
+        _mockFileRepository.Setup(repo => repo.ReadDataFromFile(It.IsAny<string>()))
+            .ReturnsAsync(flights);
+
+        // Act
+        await _flightRepository.DeleteFlight(flight.Id);
+
+        // Assert
+        _mockFileRepository.Verify(repo => repo.WriteDataToFile(It.IsAny<string>(), It.Is<List<Flight>>(f => !f.Contains(flight))), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeleteFlight_ShouldThrowException_WhenFlightNotFound()
+    {
+        // Arrange
+        var flights = new List<Flight>();
+        _mockFileRepository.Setup(repo => repo.ReadDataFromFile(It.IsAny<string>()))
+            .ReturnsAsync(flights);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _flightRepository.DeleteFlight(Guid.NewGuid()));
     }
     
-    [Theory]
-    [InlineData(FlightFilterOptions.DepartureCountry, "USA", 1)]
-    [InlineData(FlightFilterOptions.DestinationCountry, "UK", 1)]
-    [InlineData(FlightFilterOptions.DepartureAirport, "JFK", 1)]
-    [InlineData(FlightFilterOptions.ArrivalAirport, "LHR", 1)]
-    [InlineData(FlightFilterOptions.Price, "500.00", 1)]
-    [InlineData(FlightFilterOptions.Class, "Economy", 2)]
-    [InlineData(FlightFilterOptions.Class, "Business", 1)]
-    [InlineData((FlightFilterOptions)99, "any", 2)]
-    public async Task GetFilteredFlights_ShouldReturnExpectedFlights(FlightFilterOptions filter, string value, int expectedCount)
-    {
-        // Act
-        var result = await FlightRepository.GetFilteredFlights(filter, value);
-
-        // Assert
-        result.Should().HaveCount(expectedCount);
-    }
-
-    [Fact]
-    public async Task AddFlight_ShouldAddFlight()
-    {
-        // Arrange
-        var newFlight = _fixture.Create<Flight>();
-
-        // Act
-        await FlightRepository.AddFlight(newFlight);
-        var flights = await FlightRepository.GetAllFlights();
-
-        // Assert
-        flights.Should().HaveCount(3);
-        flights.Find(f => f.Id == newFlight.Id).Should().BeEquivalentTo(newFlight);
-    }
-
-    [Fact]
-    public async Task AddFlight_ShouldHandleException()
-    {
-        // Arrange
-        var newFlight = _fixture.Create<Flight>();
-
-        // Act
-        await FlightRepository.AddFlight(newFlight);
-        var flights = await FlightRepository.GetAllFlights();
-
-        // Assert
-        flights.Should().HaveCount(3);
-        flights.Find(f => f.Id == newFlight.Id).Should().BeEquivalentTo(newFlight);
-    }
-
-    [Fact]
-    public async Task UpdateFlight_ShouldModifyExistingFlight()
-    {
-        // Arrange
-        var flight = MockFlights.GetFlights().First();
-        const string newDepartureCountry = "Jordan";
-        flight.DepartureCountry = newDepartureCountry;
-
-        // Act
-        await FlightRepository.UpdateFlight(flight);
-        var updatedFlights = await FlightRepository.GetAllFlights();
-
-        // Assert
-        updatedFlights.Should().HaveCount(2);
-        updatedFlights.First().DepartureCountry.Should().Be(newDepartureCountry);
-    }
-
-    [Theory]
-    [InlineData(FlightFilterOptions.Id, "invalidGuid", typeof(InvalidDataException))]
-    [InlineData(FlightFilterOptions.DepartureDate, "invalidDate", typeof(InvalidDateFormatException))]
-    [InlineData(FlightFilterOptions.Price, "invalidPrice", typeof(InvalidDataException))]
-    [InlineData(FlightFilterOptions.Class, "InvalidClass", typeof(InvalidClassException))]
-
-    public async Task GetFilteredFlights_ShouldThrowException_ForInvalidInputs(FlightFilterOptions filter, string value,
-        Type expectedException)
-    {
-        // Act & Assert
-        await Assert.ThrowsAsync(expectedException, () => FlightRepository.GetFilteredFlights(filter, value));
-    }
-
     [Fact]
     public async Task ImportFlights_ShouldReturnError_WhenFileDoesNotExist()
     {
         // Arrange
-        var filePath = _fixture.Create<string>();
-        const string expectedErrorMessage = "File does not exist";
+        var csvFilePath = "./nonexistent.csv";
 
         // Act
-        var result = await FlightRepository.ImportFlights(filePath);
+        var result = await _flightRepository.ImportFlights(csvFilePath);
 
         // Assert
-        result.Should().ContainSingle()
-            .Which.Should().Contain(expectedErrorMessage);
+        result.Should().Contain("File does not exist");
+    }
+
+    [Fact]
+    public async Task GetFilteredFlights_ShouldFilterById()
+    {
+        // Arrange
+        var flight = _fixture.Create<Flight>();
+        var flights = new List<Flight> { flight };
+        _mockFileRepository.Setup(repo => repo.ReadDataFromFile(It.IsAny<string>()))
+            .ReturnsAsync(flights);
+
+        // Act
+        var result = await _flightRepository.GetFilteredFlights(FlightFilterOptions.Id, flight.Id.ToString());
+
+        // Assert
+        result.Should().ContainSingle().Which.Should().BeEquivalentTo(flight);
+    }
+
+    [Fact]
+    public async Task GetFilteredFlights_ShouldThrowException_WhenInvalidId()
+    {
+        // Arrange
+        var flights = new List<Flight>();
+        _mockFileRepository.Setup(repo => repo.ReadDataFromFile(It.IsAny<string>()))
+            .ReturnsAsync(flights);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidDataException>(() => _flightRepository.GetFilteredFlights(FlightFilterOptions.Id, "invalid-id"));
+    }
+
+    [Fact]
+    public async Task GetFilteredFlights_ShouldFilterByDepartureCountry()
+    {
+        // Arrange
+        var flight = _fixture.Create<Flight>();
+        var flights = new List<Flight> { flight };
+        _mockFileRepository.Setup(repo => repo.ReadDataFromFile(It.IsAny<string>()))
+            .ReturnsAsync(flights);
+
+        // Act
+        var result = await _flightRepository.GetFilteredFlights(FlightFilterOptions.DepartureCountry, flight.DepartureCountry);
+
+        // Assert
+        result.Should().ContainSingle().Which.Should().BeEquivalentTo(flight);
+    }
+
+    [Fact]
+    public async Task GetFilteredFlights_ShouldFilterByDestinationCountry()
+    {
+        // Arrange
+        var flight = _fixture.Create<Flight>();
+        var flights = new List<Flight> { flight };
+        _mockFileRepository.Setup(repo => repo.ReadDataFromFile(It.IsAny<string>()))
+            .ReturnsAsync(flights);
+
+        // Act
+        var result = await _flightRepository.GetFilteredFlights(FlightFilterOptions.DestinationCountry, flight.DestinationCountry);
+
+        // Assert
+        result.Should().ContainSingle().Which.Should().BeEquivalentTo(flight);
+    }
+
+    [Fact]
+    public async Task GetFilteredFlights_ShouldFilterByDepartureDate()
+    {
+        // Arrange
+        var flight = _fixture.Create<Flight>();
+        var flights = new List<Flight> { flight };
+        _mockFileRepository.Setup(repo => repo.ReadDataFromFile(It.IsAny<string>()))
+            .ReturnsAsync(flights);
+
+        // Act
+        var result = await _flightRepository.GetFilteredFlights(FlightFilterOptions.DepartureDate, flight.DepartureDate.ToString("yyyy-MM-dd"));
+
+        // Assert
+        result.Should().ContainSingle().Which.Should().BeEquivalentTo(flight);
+    }
+
+    [Fact]
+    public async Task GetFilteredFlights_ShouldThrowException_WhenInvalidDateFormat()
+    {
+        // Arrange
+        var flights = new List<Flight>();
+        _mockFileRepository.Setup(repo => repo.ReadDataFromFile(It.IsAny<string>()))
+            .ReturnsAsync(flights);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidDateFormatException>(() => _flightRepository.GetFilteredFlights(FlightFilterOptions.DepartureDate, "invalid-date"));
+    }
+
+    [Fact]
+    public async Task GetFilteredFlights_ShouldFilterByDepartureAirport()
+    {
+        // Arrange
+        var flight = _fixture.Create<Flight>();
+        var flights = new List<Flight> { flight };
+        _mockFileRepository.Setup(repo => repo.ReadDataFromFile(It.IsAny<string>()))
+            .ReturnsAsync(flights);
+
+        // Act
+        var result = await _flightRepository.GetFilteredFlights(FlightFilterOptions.DepartureAirport, flight.DepartureAirport);
+
+        // Assert
+        result.Should().ContainSingle().Which.Should().BeEquivalentTo(flight);
+    }
+
+    [Fact]
+    public async Task GetFilteredFlights_ShouldFilterByArrivalAirport()
+    {
+        // Arrange
+        var flight = _fixture.Create<Flight>();
+        var flights = new List<Flight> { flight };
+        _mockFileRepository.Setup(repo => repo.ReadDataFromFile(It.IsAny<string>()))
+            .ReturnsAsync(flights);
+
+        // Act
+        var result = await _flightRepository.GetFilteredFlights(FlightFilterOptions.ArrivalAirport, flight.ArrivalAirport);
+
+        // Assert
+        result.Should().ContainSingle().Which.Should().BeEquivalentTo(flight);
+    }
+
+    [Fact]
+    public async Task GetFilteredFlights_ShouldFilterByPrice()
+    {
+        // Arrange
+        var flight = _fixture.Create<Flight>();
+        var flights = new List<Flight> { flight };
+        _mockFileRepository.Setup(repo => repo.ReadDataFromFile(It.IsAny<string>()))
+            .ReturnsAsync(flights);
+
+        var price = flight.Prices.Values.First().ToString();
+
+        // Act
+        var result = await _flightRepository.GetFilteredFlights(FlightFilterOptions.Price, price);
+
+        // Assert
+        result.Should().ContainSingle().Which.Should().BeEquivalentTo(flight);
+    }
+
+    [Fact]
+    public async Task GetFilteredFlights_ShouldThrowException_WhenInvalidPrice()
+    {
+        // Arrange
+        var flights = new List<Flight>();
+        _mockFileRepository.Setup(repo => repo.ReadDataFromFile(It.IsAny<string>()))
+            .ReturnsAsync(flights);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidDataException>(() => _flightRepository.GetFilteredFlights(FlightFilterOptions.Price, "invalid-price"));
+    }
+
+    [Fact]
+    public async Task GetFilteredFlights_ShouldFilterByClass()
+    {
+        // Arrange
+        var flight = _fixture.Create<Flight>();
+        var flights = new List<Flight> { flight };
+        _mockFileRepository.Setup(repo => repo.ReadDataFromFile(It.IsAny<string>()))
+            .ReturnsAsync(flights);
+
+        var flightClass = flight.Prices.Keys.First().ToString();
+
+        // Act
+        var result = await _flightRepository.GetFilteredFlights(FlightFilterOptions.Class, flightClass);
+
+        // Assert
+        result.Should().ContainSingle().Which.Should().BeEquivalentTo(flight);
+    }
+
+    [Fact]
+    public async Task GetFilteredFlights_ShouldThrowException_WhenInvalidClass()
+    {
+        // Arrange
+        var flights = new List<Flight>();
+        _mockFileRepository.Setup(repo => repo.ReadDataFromFile(It.IsAny<string>()))
+            .ReturnsAsync(flights);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidClassException>(() => _flightRepository.GetFilteredFlights(FlightFilterOptions.Class, "invalid-class"));
     }
 }

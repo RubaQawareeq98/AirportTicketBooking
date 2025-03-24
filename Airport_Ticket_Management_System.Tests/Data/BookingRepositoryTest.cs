@@ -24,8 +24,7 @@ public class BookingRepositoryTest
         _fixture = new Fixture().Customize(new AutoMoqCustomization());
         _mockFileRepository = _fixture.Freeze<Mock<IFileRepository<Booking>>>();
         var mockFilePathSettings = _fixture.Freeze<Mock<IFilePathSettings>>();
-
-
+        
         mockFilePathSettings.Setup(s => s.Bookings).Returns("./bookings.json");
 
         _bookingRepository = _fixture.Create<BookingRepository>();

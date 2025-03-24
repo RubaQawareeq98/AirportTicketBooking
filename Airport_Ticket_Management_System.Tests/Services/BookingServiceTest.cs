@@ -1,165 +1,196 @@
-using Airport_Ticket_Management_System.Tests.Data.MockingData;
 using AutoFixture;
+using AutoFixture.AutoMoq;
+using Data.Bookings;
 using FluentAssertions;
 using Model.Bookings;
-using Model.Flights;
 using Model.Users.Exceptions;
+using Moq;
+using Services.Bookings;
 using Services.Bookings.Exceptions;
 
 namespace Airport_Ticket_Management_System.Tests.Services;
 
-public class BookingServiceTest : TestBase
+public class BookingServiceTest
 {
-    private readonly Fixture _fixture = new();
+    private readonly IFixture _fixture;
+    private readonly Mock<IBookingRepository> _mockBookingRepository;
+
+    private readonly BookingService _bookingService;
+
+    public BookingServiceTest()
+    {
+        _fixture = new Fixture().Customize(new AutoMoqCustomization());
+        _mockBookingRepository = _fixture.Freeze<Mock<IBookingRepository>>();
+        _bookingService = _fixture.Create<BookingService>();
+    }
 
     [Fact]
     public async Task GetAllBookings_ShouldReturnAllBookings()
     {
+        // Arrange
+        var bookings = _fixture.CreateMany<Booking>(2).ToList();
+        _mockBookingRepository.Setup(repo => repo.GetAllBookings())
+            .ReturnsAsync(bookings);
+
         // Act
-        var result = await BookingService.GetAllBookings();
+        var result = await _bookingService.GetAllBookings();
 
         // Assert
         result.Should().NotBeNull();
         result.Should().HaveCount(2);
     }
-    
+
     [Fact]
     public async Task GetAllBookings_ShouldThrowExceptionIfNoBookingsFound()
     {
         // Arrange
-        await BookingRepository.SaveBookings([]);
-        const string expectedMessage = "!!! No bookings found !!!";
+        _mockBookingRepository.Setup(repo => repo.GetAllBookings())
+            .ReturnsAsync(new List<Booking>());
 
         // Act & Assert
-        var act = async () => await BookingService.GetAllBookings();
+        var act = async () => await _bookingService.GetAllBookings();
         await act.Should().ThrowAsync<NoBookingFoundException>()
-            .WithMessage(expectedMessage);
+            .WithMessage("!!! No bookings found !!!");
     }
-    
+
     [Fact]
     public async Task GetBookingById_ReturnsBooking()
     {
-        // Arrange 
-        var bookingId = new Guid("3da9efb3-185c-4233-bf4e-bbc0ece85484");
-        
+        // Arrange
+        var bookingId = Guid.NewGuid();
+        var booking = _fixture.Build<Booking>()
+            .With(b => b.Id, bookingId)
+            .Create();
+
+        _mockBookingRepository.Setup(repo => repo.GetAllBookings())
+            .ReturnsAsync(new List<Booking> { booking });
+
         // Act
-        var booking = await BookingService.GetBookingById(bookingId);
-        
+        var result = await _bookingService.GetBookingById(bookingId);
+
         // Assert
-        booking.Should().NotBeNull();
-        booking.Id.Should().Be(bookingId);
+        result.Should().NotBeNull();
+        result.Id.Should().Be(bookingId);
     }
-    
+
     [Fact]
     public async Task GetBookingById_ShouldThrowExceptionIfBookingNotFound()
     {
-        // Arrange 
+        // Arrange
         var bookingId = Guid.NewGuid();
-        const string expectedMessage = "Invalid booking Id";
-        
+        _mockBookingRepository.Setup(repo => repo.GetAllBookings())
+            .ReturnsAsync(new List<Booking>());
+
         // Act & Assert
-        var act = async () => await BookingService.GetBookingById(bookingId);
+        var act = async () => await _bookingService.GetBookingById(bookingId);
         await act.Should().ThrowAsync<BookingNotFoundException>()
-            .WithMessage(expectedMessage);
+            .WithMessage("Invalid booking Id");
     }
-    
+
     [Fact]
     public async Task GetFilteredBookings_ShouldThrowExceptionIfBookingNotFound()
     {
         // Arrange
         const BookingFilterOptions filterOption = BookingFilterOptions.DepartureCountry;
         const string filterValue = "value";
-        const string expectedMessage = "!!! No bookings found !!!";
-        
+
+        _mockBookingRepository.Setup(repo => repo.GetAllBookings())
+            .ReturnsAsync(new List<Booking>());
+
         // Act & Assert
-        var act = async () => await BookingService.GetFilteredBooking(filterOption, filterValue);
+        var act = async () => await _bookingService.GetFilteredBooking(filterOption, filterValue);
         await act.Should().ThrowAsync<BookingNotFoundException>()
-            .WithMessage(expectedMessage);
+            .WithMessage("!!! No bookings found !!!");
     }
-    
+
     [Fact]
-    public async Task AddBooking_ShouldAddsBooking()
+    public async Task AddBooking_ShouldAddBooking()
     {
         // Arrange
         var booking = _fixture.Create<Booking>();
-      
+        _mockBookingRepository.Setup(repo => repo.GetAllBookings())
+            .ReturnsAsync(new List<Booking>());
+
         // Act
-        await BookingService.AddBooking(booking);
-        
+        await _bookingService.AddBooking(booking);
+
         // Assert
-        var bookings = await BookingService.GetAllBookings();
-        bookings.Should().NotBeNull();
-        bookings.Should().HaveCount(3);
+        _mockBookingRepository.Verify(repo => repo.AddBooking(booking), Times.Once);
     }
-    
+
     [Fact]
     public async Task AddBooking_ShouldThrowExceptionIfBookingExists()
     {
         // Arrange
-        var booking = MockBookings.GetMockBookings().Last();
-        const string expectedMessage = "This Booing already exists";
+        var booking = _fixture.Create<Booking>();
+        _mockBookingRepository.Setup(repo => repo.GetAllBookings())
+            .ReturnsAsync(new List<Booking> { booking });
 
         // Act & Assert
-        var act = async () => await BookingService.AddBooking(booking);
+        var act = async () => await _bookingService.AddBooking(booking);
         await act.Should().ThrowAsync<BookingAlreadyExistException>()
-            .WithMessage(expectedMessage);
+            .WithMessage("This Booing already exists");
     }
-    
+
     [Fact]
     public async Task UpdateBooking_ShouldUpdateBooking()
     {
         // Arrange
-        var booking = MockBookings.GetMockBookings().Last();
-        var newFlightClass = _fixture.Create<FlightClass>();
-        booking.FlightClass = newFlightClass;
-      
+        var booking = _fixture.Create<Booking>();
+        _mockBookingRepository.Setup(repo => repo.GetAllBookings())
+            .ReturnsAsync(new List<Booking> { booking });
+
         // Act
-        await BookingService.UpdateBooking(booking);
-        
+        await _bookingService.UpdateBooking(booking);
+
         // Assert
-        var bookings = await BookingService.GetAllBookings();
-        bookings.Should().NotBeNull();
-        bookings.Should().ContainSingle(b => b != null && b.FlightClass == newFlightClass);
+        _mockBookingRepository.Verify(repo => repo.UpdateBooking(booking), Times.Once);
     }
-    
+
     [Fact]
     public async Task UpdateBooking_ShouldThrowExceptionIfBookingNotFound()
     {
         // Arrange
         var booking = _fixture.Create<Booking>();
-        const string expectedMessage = "Booking not found";
+        _mockBookingRepository.Setup(repo => repo.GetAllBookings())
+            .ReturnsAsync(new List<Booking>());
 
         // Act & Assert
-        var act = async () => await BookingService.UpdateBooking(booking);
+        var act = async () => await _bookingService.UpdateBooking(booking);
         await act.Should().ThrowAsync<BookingNotFoundException>()
-            .WithMessage(expectedMessage);
-    } 
-    
+            .WithMessage("Booking not found");
+    }
+
     [Fact]
     public async Task DeleteBooking_ShouldDeleteBooking()
     {
         // Arrange
-        var bookingId = new Guid("3da9efb3-185c-4233-bf4e-bbc0ece85484");
-      
+        var bookingId = Guid.NewGuid();
+        var booking = _fixture.Build<Booking>()
+            .With(b => b.Id, bookingId)
+            .Create();
+
+        _mockBookingRepository.Setup(repo => repo.GetAllBookings())
+            .ReturnsAsync([booking]);
+
         // Act
-        await BookingService.DeleteBooking(bookingId);
-        
+        await _bookingService.DeleteBooking(bookingId);
+
         // Assert
-        var bookings = await BookingService.GetAllBookings();
-        bookings.Should().NotBeNull(); 
-        bookings.Should().ContainSingle(b => b != null && b.Id == bookingId && b.Cancelled);
+        _mockBookingRepository.Verify(repo => repo.CancelBooking(bookingId), Times.Once);
     }
-    
+
     [Fact]
     public async Task DeleteBooking_ShouldThrowExceptionIfBookingNotFound()
     {
         // Arrange
-        var bookingId = _fixture.Create<Guid>();
-        const string expectedMessage = "Invalid booking Id";
+        var bookingId = Guid.NewGuid();
+        _mockBookingRepository.Setup(repo => repo.GetAllBookings())
+            .ReturnsAsync([]);
 
         // Act & Assert
-        var act = async () => await BookingService.DeleteBooking(bookingId);
+        var act = async () => await _bookingService.DeleteBooking(bookingId);
         await act.Should().ThrowAsync<BookingNotFoundException>()
-            .WithMessage(expectedMessage);
+            .WithMessage("Invalid booking Id");
     }
 }
