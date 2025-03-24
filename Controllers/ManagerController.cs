@@ -1,10 +1,11 @@
 using Services.Bookings;
 using Services.Flights;
+using Views.Consoles;
 using Views.Managers;
 
 namespace Controllers;
 
-public class ManagerController(IManagerView managerView, IFlightService flightService, IBookingService bookingService)
+public class ManagerController(IConsoleService consoleService, IManagerView managerView, IFlightService flightService, IBookingService bookingService)
 {
     public async Task ManagePage()
     {
@@ -27,10 +28,10 @@ public class ManagerController(IManagerView managerView, IFlightService flightSe
                     await HandleImportFlights();
                     break;
                 case ManagerOptions.Exit:
-                    Console.WriteLine("Goodbye!");
+                    consoleService.WriteLine("Goodbye!");
                     return;
                 default:
-                    Console.WriteLine("Please select a valid option");
+                    consoleService.WriteLine("Please select a valid option");
                     break;
             }
         }
@@ -42,7 +43,7 @@ public class ManagerController(IManagerView managerView, IFlightService flightSe
         var result = await flightService.ImportFlight(path);
         foreach (var res in result)
         {
-            Console.WriteLine(res);
+            consoleService.WriteLine(res);
         }
     }
 
@@ -55,7 +56,7 @@ public class ManagerController(IManagerView managerView, IFlightService flightSe
         }
         catch (Exception e)
         {
-            Console.WriteLine(e.Message);
+            consoleService.WriteLine(e.Message);
         }
     }
     
@@ -68,7 +69,7 @@ public class ManagerController(IManagerView managerView, IFlightService flightSe
         }
         catch (Exception e)
         {
-            Console.WriteLine(e.Message);
+            consoleService.WriteLine(e.Message);
         }
     }
     
@@ -84,7 +85,7 @@ public class ManagerController(IManagerView managerView, IFlightService flightSe
         }
         catch (Exception e)
         {
-            Console.WriteLine(e.Message);
+            consoleService.WriteLine(e.Message);
         }
     }
 }

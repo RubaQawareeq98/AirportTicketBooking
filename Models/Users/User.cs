@@ -2,11 +2,11 @@ namespace Model.Users;
 
 public class User
 {
-    public required Guid Id { get; set; }
-    public required string UserName { get; set; }
-    public required string Password { get; set; }
-    public required string FullName { get; set; }
-    public required UserRole Role { get; set; }
+    public required Guid Id { get; init; }
+    public required string UserName { get; init; }
+    public required string Password { get; init; }
+    public required string FullName { get; init; }
+    public required UserRole Role { get; init; }
 
     public override string ToString()
     {

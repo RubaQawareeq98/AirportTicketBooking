@@ -1,5 +1,5 @@
-using Data;
 using Data.Bookings;
+using Data.Users;
 using Model.Bookings;
 using Model.Users;
 using Model.Users.Exceptions;

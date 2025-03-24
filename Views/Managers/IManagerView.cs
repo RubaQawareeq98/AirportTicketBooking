@@ -1,4 +1,3 @@
-using Model;
 using Model.Bookings;
 using Model.Flights;
 

@@ -1,11 +1,13 @@
+using Model.Flights;
+
 namespace Model.Bookings;
 
 public class Booking(Guid passengerId, Guid flightId, FlightClass flightClass, double price)
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid Id { get; init; } = Guid.NewGuid();
     public Guid PassengerId { get; set; } = passengerId;
     public Guid FlightId { get; set; } = flightId;
-    public DateTime BookingDate { get; set; } = DateTime.Now;
+    public DateTime BookingDate { get; init; } = DateTime.Now;
     public FlightClass FlightClass { get; set; } = flightClass;
     public double Price { get; set; } = price;
     public bool Cancelled { get; set; }

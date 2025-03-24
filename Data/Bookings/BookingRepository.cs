@@ -1,9 +1,11 @@
+using Data.Exceptions;
+using Data.Files;
 using Model.Bookings;
 using Model.Users.Exceptions;
 
 namespace Data.Bookings;
 
-public class BookingRepository(FilePathSettings settings, IFileRepository<Booking> fileRepository) : IBookingRepository
+public class BookingRepository(IFilePathSettings settings, IFileRepository<Booking> fileRepository) : IBookingRepository
 {
 
     public async Task<List<Booking>> GetAllBookings()
@@ -105,7 +107,7 @@ public class BookingRepository(FilePathSettings settings, IFileRepository<Bookin
                 return bookingDetails.Where(item => item.PassengerId == Guid.Parse(value)).Select(item => item).ToList();
             
             case BookingFilterOptions.ClassType:
-                return bookingDetails.Where(item => nameof(item.FlightClass) == value).Select(item => item).ToList();
+                return bookingDetails.Where(item => item.FlightClass.ToString() == value).Select(item => item).ToList();
             
             case BookingFilterOptions.Price:
                 return bookingDetails.Where(item => Math.Abs(item.Price - double.Parse(value)) < 0).Select(item => item).ToList();

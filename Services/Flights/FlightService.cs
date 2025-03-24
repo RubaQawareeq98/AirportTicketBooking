@@ -1,5 +1,4 @@
 using Data.Flights;
-using Model;
 using Model.Flights;
 using Services.Flights.Exceptions;
 

@@ -1,10 +1,12 @@
+using Views.Consoles;
+
 namespace Views;
 
-public class LoginView : ILoginView
+public class LoginView (IConsoleService consoleService): ILoginView
 {
     public void WelcomeMessage()
     {
-        Console.WriteLine("Welcome to Airport_Ticket_Booking_System");
+        consoleService.WriteLine("Welcome to Airport_Ticket_Booking_System");
     }
 
     public string ReadUserName()
@@ -12,11 +14,11 @@ public class LoginView : ILoginView
         string? username;
         do
         {
-            Console.WriteLine("Enter your username: ");
-            username = Console.ReadLine();
+            consoleService.WriteLine("Enter your username: ");
+            username = consoleService.ReadLine();
             if (string.IsNullOrEmpty(username))
             {
-                Console.WriteLine("Please enter a valid username");
+                consoleService.WriteLine("Please enter a valid username");
             }
         }while(string.IsNullOrEmpty(username));
         
@@ -28,11 +30,11 @@ public class LoginView : ILoginView
         string? password;
         do
         {
-            Console.WriteLine("Enter your password: ");
-            password = Console.ReadLine();
+            consoleService.WriteLine("Enter your password: ");
+            password = consoleService.ReadLine();
             if (string.IsNullOrEmpty(password))
             {
-                Console.WriteLine("Please enter a valid password");
+                consoleService.WriteLine("Please enter a valid password");
             }
         }while(string.IsNullOrEmpty(password));
         

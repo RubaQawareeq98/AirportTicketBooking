@@ -1,12 +1,12 @@
 using System.Globalization;
 using CsvHelper;
 using Data.Exceptions;
-using Model;
+using Data.Files;
 using Model.Flights;
 
 namespace Data.Flights;
 
-public class FlightRepository(FilePathSettings settings, FlightValidator validator, IFileRepository<Flight> fileRepository) : IFlightRepository
+public class FlightRepository(IFilePathSettings settings, FlightValidator validator, IFileRepository<Flight> fileRepository) : IFlightRepository
 {
 
     public async Task<List<Flight>> GetAllFlights()
@@ -23,7 +23,7 @@ public class FlightRepository(FilePathSettings settings, FlightValidator validat
         }
     }
 
-    public async Task SavaFlights(List<Flight> flights)
+    public async Task SaveFlights(List<Flight> flights)
     {
         try
         {
@@ -42,13 +42,12 @@ public class FlightRepository(FilePathSettings settings, FlightValidator validat
         {
             var flights = await GetAllFlights();
             flights.Add(flight);
-            await SavaFlights(flights);
+            await SaveFlights(flights);
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex.Message);
         }
-       
     }
 
     public async Task UpdateFlight(Flight modifiedFlight)
@@ -60,7 +59,7 @@ public class FlightRepository(FilePathSettings settings, FlightValidator validat
                 flights[i] = modifiedFlight;
                 break;
             }
-        await SavaFlights(flights);
+        await SaveFlights(flights);
     }
 
 
@@ -73,7 +72,7 @@ public class FlightRepository(FilePathSettings settings, FlightValidator validat
             throw new InvalidOperationException("Flight not found");
         }
         flights.Remove(flight);
-        await SavaFlights(flights);
+        await SaveFlights(flights);
     }
 
     public async Task<List<string>> ImportFlights(string csvFilePath)

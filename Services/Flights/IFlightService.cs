@@ -1,4 +1,3 @@
-using Model;
 using Model.Flights;
 
 namespace Services.Flights;

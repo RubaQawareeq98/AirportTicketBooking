@@ -4,7 +4,6 @@ namespace Data.Files;
 
 public class FileRepository<T> : IFileRepository<T>
 {
-    
     public async Task<List<T>> ReadDataFromFile(string filePath)
     {
         try

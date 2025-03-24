@@ -12,6 +12,6 @@ public enum BookingFilterOptions
     DestinationCountry,
     Price,
     PassengerId,
-    PassengerName,
+    PassengerName
 }
 

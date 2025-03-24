@@ -8,16 +8,15 @@ using Views.Passengers;
 
 namespace Controllers;
 
-public class PassengerController(IFlightService flightService,
+public class PassengerController(IPassengerView passengerView,  IFlightService flightService,
     IUserService userService, ICurrentUser currentUser, IBookingService bookingService)
 {
-    private readonly PassengerView _passengerView = new();
 
     public async Task ShowPassengerPage()
     {
         while (true)
         {
-            var option = _passengerView.ShowPassengerMainMenu();
+            var option = passengerView.ShowPassengerMainMenu();
             if (option == PassengerOptions.Exit)
             {
                 break;
@@ -61,7 +60,7 @@ public class PassengerController(IFlightService flightService,
         try
         {
             var bookings = await userService.GetPassengerBookings(currentUser.User.Id);
-            _passengerView.ShowBookings(bookings);
+            passengerView.ShowBookings(bookings);
         }
         catch (Exception ex)
         {
@@ -74,7 +73,7 @@ public class PassengerController(IFlightService flightService,
         try
         {
             var flights = await flightService.GetAllFlights();
-            _passengerView.ShowFlights(flights);
+            passengerView.ShowFlights(flights);
         }
         catch (Exception ex)
         {
@@ -84,13 +83,13 @@ public class PassengerController(IFlightService flightService,
 
     private async Task HandleModifyBooking()
     {
-        var bookingId = PassengerView.ReadBookingId();
+        var bookingId = passengerView.ReadBookingId();
         var booking = await bookingService.GetBookingById(bookingId);
         if (booking is null || booking.PassengerId != currentUser.User.Id)
         {
             throw new NoBookingFoundException("Invalid booking id");
         }
-        var flightClass = PassengerView.ReadFlightClass();
+        var flightClass = passengerView.ReadFlightClass();
         try
         {
             var flight = await flightService.GetFlightById(booking.FlightId);
@@ -109,11 +108,11 @@ public class PassengerController(IFlightService flightService,
     {
         try
         {
-            _passengerView.ShowFilterOptions();
-            var option = _passengerView.ReadFilterOptions();
-            var value = _passengerView.ReadFilterValue();
+            passengerView.ShowFilterOptions();
+            var option = passengerView.ReadFilterOptions();
+            var value = passengerView.ReadFilterValue();
             var filteredFlights = await flightService.GetFilteredFlights(option, value);
-            _passengerView.ShowFlights(filteredFlights);
+            passengerView.ShowFlights(filteredFlights);
         }
         catch (Exception e)
         {
@@ -125,13 +124,13 @@ public class PassengerController(IFlightService flightService,
     {
         try
         {
-            var flightId = PassengerView.ReadFlightId();
+            var flightId = passengerView.ReadFlightId();
             var flight = await flightService.GetFlightById(flightId);
             if (flight is null)
             {
                 throw new FlightNotFoundException("Flight not found");
             }
-            var flightClass = PassengerView.ReadFlightClass();
+            var flightClass = passengerView.ReadFlightClass();
             var booking = new Booking(currentUser.User.Id, flight.Id, flightClass, flight.Prices[flightClass]);
             await bookingService.AddBooking(booking);
             Console.WriteLine("Your booking is successfully booked");
@@ -146,7 +145,7 @@ public class PassengerController(IFlightService flightService,
     {
         try
         {
-            var bookingId = PassengerView.ReadBookingId();
+            var bookingId = passengerView.ReadBookingId();
             var booking1 = await bookingService.GetBookingById(bookingId);
             if (booking1 is null || booking1.PassengerId != currentUser.User.Id)
             {
@@ -161,5 +160,4 @@ public class PassengerController(IFlightService flightService,
             Console.WriteLine(exp.Message);
         }
     }
-
 }
