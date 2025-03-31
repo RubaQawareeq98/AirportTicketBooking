@@ -1,6 +1,5 @@
 using Views.Passengers;
 using AutoFixture;
-using AutoFixture.AutoMoq;
 using Model.Bookings;
 using Model.Flights;
 using Data.Exceptions;
@@ -19,7 +18,7 @@ public class PassengerViewTests
 
     public PassengerViewTests()
     {
-        _fixture = new Fixture().Customize(new AutoMoqCustomization());
+        _fixture = new Fixture();
         _consoleService = new ConsoleService();
         _view = new PassengerView(_consoleService);
     }

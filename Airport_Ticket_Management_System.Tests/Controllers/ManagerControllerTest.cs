@@ -72,7 +72,8 @@ public class ManagerControllerTest
     public async Task ManagerPage_ShouldHandleExceptionCallViewFlights()
     {
         // Arrange
-        _bookingServiceMock.Setup(s => s.GetAllBookings()).ThrowsAsync(new NoBookingFoundException("!!! No bookings found !!!"));
+        const string message = "!!! No bookings found !!!";
+        _bookingServiceMock.Setup(s => s.GetAllBookings()).ThrowsAsync(new NoBookingFoundException(message));
         _managerViewMock.SetupSequence(v => v.ReadManagerOptions())
             .Returns(ManagerOptions.ViewBookings)
             .Returns(ManagerOptions.Exit);
@@ -89,7 +90,8 @@ public class ManagerControllerTest
     public async Task ManagerPage_ShouldHandleExceptionCallViewBookings()
     {
         // Arrange
-        _flightServiceMock.Setup(s => s.GetAllFlights()).ThrowsAsync(new FlightNotFoundException("!!! No flight was found !!!"));
+        const string message = "!!! No Flight found !!!";
+        _flightServiceMock.Setup(s => s.GetAllFlights()).ThrowsAsync(new FlightNotFoundException(message));
         _managerViewMock.SetupSequence(v => v.ReadManagerOptions())
             .Returns(ManagerOptions.ViewFlights)
             .Returns(ManagerOptions.Exit);

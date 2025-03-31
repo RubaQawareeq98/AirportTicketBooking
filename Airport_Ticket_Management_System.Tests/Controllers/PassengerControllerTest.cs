@@ -72,7 +72,8 @@ namespace Airport_Ticket_Management_System.Tests.Controllers;
         public async Task HandleViewFlights_ShouldHandleException_WhenNoFlightsExist()
         {
             // Arrange
-            _flightServiceMock.Setup(s => s.GetAllFlights()).ThrowsAsync(new FlightNotFoundException("!!! No flight was found !!!"));
+            const string message = "!!! No flight was found !!!";
+            _flightServiceMock.Setup(s => s.GetAllFlights()).ThrowsAsync(new FlightNotFoundException(message));
             _passengerViewMock.SetupSequence(v => v.ShowPassengerMainMenu())
                 .Returns(PassengerOptions.ViewFlights)
                 .Returns(PassengerOptions.Exit);
