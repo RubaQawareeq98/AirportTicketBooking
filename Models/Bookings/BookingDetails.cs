@@ -14,8 +14,8 @@ public class BookingDetails : Booking
         BookingDate = bookingDate;
     }
 
-    public Flight Flight { get; set; }
-    public User User { get; set; }
+    public Flight Flight { get; }
+    public User User { get; }
 
     public override string ToString()
     {

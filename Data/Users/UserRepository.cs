@@ -1,14 +1,17 @@
+using Data.Files;
 using Model.Users;
 
 namespace Data.Users;
 
-public class UserRepository(FilePathSettings settings, IFileRepository<User> fileRepository) : IUserRepository
+public class UserRepository(IFilePathSettings settings, IFileRepository<User> fileRepository) : IUserRepository
 {
 
     public async Task<List<User>> GetAllUsers()
     {
         try
         {
+            Console.WriteLine("Getting all users");
+            Console.WriteLine(settings.Users, "  ", settings.Flights);
             var users = await fileRepository.ReadDataFromFile(settings.Users);
             return users;
         }

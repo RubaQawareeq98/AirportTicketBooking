@@ -1,6 +1,3 @@
 namespace Views;
 
-public class InvalidOptionException(string message) : Exception  (message)
-{
-    
-}
+public class InvalidOptionException(string message) : Exception  (message);

@@ -1,4 +1,4 @@
-namespace Data;
+namespace Data.Files;
 
 public interface IFileRepository<T>
 {

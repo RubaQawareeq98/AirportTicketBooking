@@ -4,7 +4,7 @@ namespace Model.Flights;
 
 public sealed class FlightMap : ClassMap<Flight>
 {
-    public FlightMap()
+    private FlightMap()
     {
         Map(f => f.Id);
         Map(f => f.DepartureCountry);
